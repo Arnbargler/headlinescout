@@ -1,5 +1,15 @@
 # Roadmap
 
+## Word-frequency iteration
+
+- [x] Dashboard: top 10 mentioned headline words across 1 hour, 24 hours, and 7 days
+- [x] Count unique stored headlines first seen during each window (not repeat scan appearances)
+- [x] Persist and seed ignored words once; edit words/phrases from Source Lab
+- [x] Apply case-insensitive whole-phrase removal before counting words
+- [x] Add in-memory SQLite regression test
+- [ ] Run new PHP syntax checks and regression test on Colossus
+
+
 ## Current dashboard behavior
 
 - [x] Show only first 10 headline appearances from each source's latest successful scan
