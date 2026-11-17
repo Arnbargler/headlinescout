@@ -7,7 +7,7 @@ function e(mixed $value): string { return htmlspecialchars((string)$value, ENT_Q
 $sourceFilter=filter_input(INPUT_GET,'source',FILTER_VALIDATE_INT) ?: 0;
 $current=($_GET['show']??'current') !== 'all';
 $q=trim((string)($_GET['q']??''));
-$sources=$db->query('SELECT s.*, (SELECT COUNT(*) FROM headlines h WHERE h.source_id=s.id AND h.is_current=1) AS active_count FROM sources s ORDER BY id')->fetchAll();
+$sources=$db->query('SELECT s.id,s.name,s.last_success_at,s.last_status FROM sources s ORDER BY id')->fetchAll();
 $sql='SELECT h.*,s.name AS source_name FROM headlines h JOIN sources s ON s.id=h.source_id WHERE 1=1';
 $args=[];
 if ($current) $sql.=' AND h.is_current=1';
@@ -15,7 +15,7 @@ if ($sourceFilter) { $sql.=' AND h.source_id=?'; $args[]=$sourceFilter; }
 if ($q!=='') { $sql.=' AND h.title LIKE ?'; $args[]='%'.$q.'%'; }
 $sql.=' ORDER BY h.first_seen_at DESC LIMIT 250';
 $stmt=$db->prepare($sql);$stmt->execute($args);$headlines=$stmt->fetchAll();
-$lastSuccess=max(array_map(fn($s)=>strtotime($s['last_success_at']??'')?:0,$sources));
+$lastSuccess=$sources ? max(array_map(fn($s)=>strtotime($s['last_success_at']??'')?:0,$sources)) : 0;
 $errors=array_filter($sources,fn($s)=>$s['last_status']==='error');
 ?>
 <!doctype html>
@@ -25,14 +25,6 @@ $errors=array_filter($sources,fn($s)=>$s['last_status']==='error');
 <body>
 <header><div class="shell top"><div><div class="eyebrow">FRONT PAGE INTELLIGENCE</div><h1>HEADLINE<span>SCOUT</span></h1></div><div class="health"><a class="navlink" href="/lab.php">Source Lab →</a><br><span class="led"></span> <?=count($sources)?> sources · <?=count($errors)?> errors<br><small>Last success: <?= $lastSuccess?e(gmdate('M j, H:i',$lastSuccess)).' UTC':'Not yet scanned' ?></small></div></div></header>
 <main class="shell">
-<section class="summary">
-<?php foreach($sources as $source): ?>
-<div class="source"><div class="source-top"><strong><?=e($source['name'])?></strong><span class="state <?=e($source['last_status']??'pending')?>"><?=e($source['last_status']??'pending')?></span></div>
-<div class="count"><?= (int)$source['active_count'] ?> <small>current headlines</small></div>
-<div class="meta">Last scan: <?= $source['last_scan_at'] ? e(gmdate('M j, H:i',strtotime($source['last_scan_at']))).' UTC' : 'never' ?></div>
-<?php if($source['last_error']): ?><div class="error" title="<?=e($source['last_error'])?>"><?=e($source['last_error'])?></div><?php endif; ?></div>
-<?php endforeach; ?>
-</section>
 <section class="panel">
 <div class="panel-head"><h2>HEADLINE FEED</h2><span><?=count($headlines)?> results</span></div>
 <form method="get" class="filters">
