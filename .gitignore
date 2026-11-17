@@ -1,0 +1,22 @@
+# Secrets and environment-specific settings
+.env
+.env.*
+!.env.example
+config/*.local.php
+
+# Writable runtime data / databases
+var/*
+!var/.gitkeep
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Dependencies, tooling
+/vendor/
+/.idea/
+/.vscode/
+.DS_Store
+coverage/
