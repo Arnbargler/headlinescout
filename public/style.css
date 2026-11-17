@@ -69,3 +69,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ignore-tag button{font-size:18px;line-height:1;background:transparent;border:0;color:var(--muted);padding:2px 5px}
 .ignore-tag button:hover{color:#fb7185}
 @media(max-width:750px){.word-stats-grid{grid-template-columns:1fr}.word-period+.word-period{border-left:0;border-top:1px solid var(--line)}}
+
+/* Word-count headline filter: normal checkbox, no access gate */
+.filters .trend-toggle{flex-direction:row;align-items:center;gap:9px;cursor:pointer;color:var(--text);font-size:13px;align-self:end;padding:8px 0}
+.filters .trend-toggle input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);margin:0;flex:0 0 auto;cursor:pointer}
