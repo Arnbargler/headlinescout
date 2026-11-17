@@ -69,9 +69,9 @@ Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux l
 **Do not install cron until the first manual scan has been examined.** The first three sources are intentionally unverified. Once deployed externally, use a provider cron facility and consider 1800-second source intervals.
 
 
-## Source Lab: test and add news sites (new)
+## Settings: test and add news sites
 
-After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click **Source Lab** in the dashboard header.
+After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click the **⚙ Settings** button in the dashboard header.
 
 Source Lab is **unlocked on your home network**. There is no login, key, or logout button. The Manage Sources section lets you scan a source immediately or permanently delete it (including its saved headlines and scan history); deleted defaults will not reappear.
 
@@ -83,7 +83,7 @@ These controls are deliberately unauthenticated: **any device able to reach port
 
 On each scheduled or manual scan, HeadlineScout stores **at most the first 10 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 10 (or fewer) are marked current after a successful scan.
 
-The dashboard displays **only the latest successful scan's first 10 headlines per source**, in page order. It has no history/all-headlines option; earlier records remain in SQLite for a dedicated future History page. The optional search filters these ten per source rather than searching old records. The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. In Source Lab, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
+The dashboard displays **only the latest successful scan's first 10 headlines per source**, in page order. It has no history/all-headlines option; earlier records remain in SQLite for a dedicated future History page. The optional search filters these ten per source rather than searching old records. The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. In Settings, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
 
 Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
@@ -91,7 +91,7 @@ Manual scanning is a state-changing action guarded by the same CSRF token as oth
 
 The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows measured from the current UTC time, based on the `first_seen_at` timestamp of **unique stored headlines**. A headline contributes its title only once, even if the same link appears in multiple scans. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current ten per source**, and are independent of the dashboard source/search filters.
 
-The default ignored-word list includes ordinary English stop words such as `the`, `a`, `for`, `with`, etc. In **Source Lab → Word Count — Ignore List**, you can add either a word or phrase and remove existing entries. Matching is case-insensitive. Ignored phrases are removed as whole sequences before remaining words are counted, e.g., ignoring `breaking news` removes both words only when adjacent as that phrase. The defaults are seeded only once; removing one does not cause it to reappear. Edits take effect on the next dashboard load without changing any saved headlines.
+The default ignored-word list includes ordinary English stop words such as `the`, `a`, `for`, `with`, etc. In **Settings → Word Count — Ignore List**, you can add either a word or phrase and remove existing entries. Matching is case-insensitive. Ignored phrases are removed as whole sequences before remaining words are counted, e.g., ignoring `breaking news` removes both words only when adjacent as that phrase. The defaults are seeded only once; removing one does not cause it to reappear. Edits take effect on the next dashboard load without changing any saved headlines.
 
 No full-article text or AI inference is involved: these are raw statistics from collected headline titles. There is no minimum frequency required. All periods show up to ten results, ranked by descending mentions and alphabetically for ties.
 
@@ -158,3 +158,7 @@ SQLite files and secrets must stay **outside** the public document root.
 5. Eventually attach local Colossus llama.cpp AI for on-demand article summaries and clearly labeled speculation.
 
 See [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), [roadmap](docs/ROADMAP.md) and [sources](docs/SOURCES.md).
+
+## Navigation
+
+The dashboard header is intentionally minimal: **HeadlineScout** on the left and a gear-icon **Settings** button on the right. The Settings page remains at `/lab.php` internally to preserve existing links and bookmarks. Its page title and visible navigation are now labeled Settings.
