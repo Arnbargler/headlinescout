@@ -88,6 +88,14 @@ The suggested method is based on crude candidate counts, **not a trustworthy qua
 
 Keep `var/source-lab.key` private (it is gitignored), do not expose the prototype to the public Internet, and do not forward port 8090.
 
+## Current collection behavior
+
+On each scheduled or manual scan, HeadlineScout stores **at most the first 10 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 10 (or fewer) are marked current after a successful scan.
+
+The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. After unlocking Source Lab, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
+
+Manual scanning is a state-changing authenticated action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
+
 ## CNN download-limit adjustment
 
 The original collector had a 3 MB response cap and displayed a confusing cURL write-callback error when CNN exceeded it. The cap is now 12 MB, and any further size failure is explained explicitly. This **does not prove** CNN can be fetched or parsed; re-run the scan on Colossus to verify.
