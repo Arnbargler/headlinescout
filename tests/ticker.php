@@ -21,7 +21,7 @@ $scan=$db->prepare("INSERT INTO scans(source_id,started_at,finished_at,status,ht
 $appearance=$db->prepare('INSERT INTO appearances(scan_id,headline_id,position) VALUES(?,?,?)');
 $titles=[
     'Rocket rocket rocket market rally',
-    'Rocket market rally',
+    'Rocket market',
     'Rocket rocket market',
     'Market report today',
     'Old page rocket rocket rocket rocket'
