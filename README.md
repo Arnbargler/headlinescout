@@ -87,6 +87,25 @@ The dashboard displays **only the latest successful scan's first 10 headlines pe
 
 Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
+## Top three headline ticker
+
+A narrow marquee directly below the dashboard header scrolls **up to three headlines right to left on one line**. It chooses from the most recent successful scan for each enabled source (maximum 10 candidate headlines per source). For each candidate headline, it counts occurrences of words currently appearing in the union of the 1-hour, 24-hour and 7-day Top 10 Word Count lists. The three highest-scoring headlines win; ties favour better front-page position, then a newer scan. Ignored words and phrases are excluded using the same tokenization as the word counts. It is independent of the dashboard's source, search and word-count checkbox filters.
+
+Each scrolling headline links to the original article and includes its source name. Hover over the ticker to pause it. If fewer than three headlines contain qualifying words, fewer are shown; when none qualify, an explanatory message appears instead.
+
+The initial ticker renders on each dashboard request. A small read-only `/ticker.php` JSON endpoint is polled by `/ticker.js` **every 15 seconds** while the page is visible, so manual or scheduled source scans can change the ticker without a full browser refresh. The animation only restarts when the ranked headlines change. A reduced-motion preference disables automatic scrolling.
+
+Test after updating Colossus:
+
+```bash
+php -l src/WordStats.php
+php -l src/Ticker.php
+php -l public/ticker.php
+php -l public/index.php
+php tests/word-stats.php
+php tests/ticker.php
+```
+
 ## Word count dashboard
 
 The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows measured from the current UTC time, based on the `first_seen_at` timestamp of **unique stored headlines**. A headline contributes its title only once, even if the same link appears in multiple scans. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current ten per source**, and are independent of the dashboard source/search filters.
