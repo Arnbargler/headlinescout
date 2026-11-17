@@ -1,5 +1,14 @@
 # Roadmap
 
+## Current iteration — top ten and manual scanning
+
+- [x] Retain only the first ten qualifying homepage links per source in each successful scan; no minimum count
+- [x] Retain up to 120 candidates per Source Lab extraction test for useful method comparisons
+- [x] Add an authenticated Scan now button per source using the same scan lock as cron
+- [x] Move source headline-count/status cards from dashboard to Source Lab
+- [ ] Verify PHP syntax and run the updated app on Colossus
+
+
 ## v0.1 — implemented in GitHub, not yet tested on Colossus
 
 - [x] CLI scheduler (`bin/scan.php`) with 15-minute per-source polling and lock
