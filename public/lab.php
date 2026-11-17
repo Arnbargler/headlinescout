@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                         $db->prepare('DELETE FROM sources WHERE id=?')->execute([$id]);
                         $db->commit();
                         $notice='Removed '.$sourceName.' and its collected headlines and scan history.';
-                        if ($probe && $probe['url']===$_POST['source_url']) {
+                        if ($probe && $probe['url'] === (string)($_POST['source_url'] ?? '')) {
                             $probe=null; unset($_SESSION['source_lab_probe']);
                         }
                     } catch (Throwable $e) {
@@ -147,7 +147,7 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled, COUNT(
   <div class="managed-source-info"><strong><?=h($s['name'])?></strong>
     <div class="meta"><?=h($s['homepage_url'])?> · <?= (int)$s['headline_count'] ?> saved headlines</div>
   </div>
-  <form method="post" onsubmit="return confirm('Permanently delete <?=h(addslashes($s['name']))?> and ALL its stored headlines and history?')">
+  <form method="post" onsubmit="return confirm('Permanently delete this source and ALL its stored headlines and scan history?')">
     <input type="hidden" name="csrf" value="<?=h(csrf())?>">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="source_id" value="<?=(int)$s['id']?>">
