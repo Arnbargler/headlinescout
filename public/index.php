@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require dirname(__DIR__) . '/src/App.php';
+require dirname(__DIR__) . '/src/Ticker.php';
 use HeadlineScout\App;
 $db=App::db(); App::install($db);
 function e(mixed $value): string { return htmlspecialchars((string)$value, ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8'); }
@@ -17,6 +18,7 @@ $trendingWords=[];
 foreach ($wordStats as $period) {
     foreach ($period['words'] as $word=>$count) $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
 }
+$tickerItems=\HeadlineScout\Ticker::items($db);
 $trendingOnly=(($_GET['trending']??'')==='1');
 $matchesTrending=static function (string $title) use ($trendingWords): bool {
     if (!$trendingWords) return false;
@@ -57,6 +59,20 @@ foreach ($sources as $source) {
 <title>HeadlineScout</title><link rel="stylesheet" href="style.css"></head>
 <body>
 <header><div class="shell top"><h1 class="site-title">Headline<span>Scout</span></h1><a class="header-button" href="/lab.php"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.91 1.91-.06-.06A1.65 1.65 0 0 0 16 18.4a1.65 1.65 0 0 0-1 1.52V20h-2.7v-.08a1.65 1.65 0 0 0-1.06-1.52 1.65 1.65 0 0 0-1.81.33l-.06.06-1.91-1.91.06-.06A1.65 1.65 0 0 0 7.86 15a1.65 1.65 0 0 0-1.52-1H6v-2.7h.34a1.65 1.65 0 0 0 1.52-1.06 1.65 1.65 0 0 0-.33-1.81l-.06-.06 1.91-1.91.06.06a1.65 1.65 0 0 0 1.81.33A1.65 1.65 0 0 0 12.3 5.3V5h2.7v.3a1.65 1.65 0 0 0 1.06 1.52 1.65 1.65 0 0 0 1.81-.33l.06-.06 1.91 1.91-.06.06a1.65 1.65 0 0 0-.33 1.81 1.65 1.65 0 0 0 1.52 1.06H21v2.7h-.03A1.65 1.65 0 0 0 19.4 15Z"/></svg><span>Settings</span></a></div></header>
+<div class="ticker-bar" aria-label="Top three trending headlines">
+  <div class="shell ticker-shell">
+    <span class="ticker-caption">TOP HEADLINES</span>
+    <div class="ticker-viewport">
+      <div id="headline-ticker-track" class="ticker-track <?=$tickerItems?'ticker-scroll':''?>" data-signature="<?=e(json_encode($tickerItems, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES))?>">
+        <?php if(!$tickerItems): ?><span class="ticker-empty">No trending headlines yet — scan a source to begin.</span><?php else: ?>
+        <?php foreach($tickerItems as $headline): ?>
+        <a class="ticker-story" href="<?=e($headline['url'])?>" target="_blank" rel="noopener noreferrer"><strong><?=e($headline['source'])?> · </strong><?=e($headline['title'])?></a>
+        <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+    </div>
+  </div>
+</div>
 <main class="shell">
 <section class="word-stats">
 <div class="word-stats-title"><h2>WORD COUNT</h2><span>Headline titles first collected within each rolling period · ignored words excluded</span></div>
@@ -99,4 +115,4 @@ foreach ($sources as $source) {
 <?php endforeach; ?>
 </section>
 <footer>HeadlineScout · Latest 10 per source · Historical headlines retained for a future History page · AI analysis coming later</footer>
-</main></body></html>
+</main><script src="/ticker.js" defer></script></body></html>
