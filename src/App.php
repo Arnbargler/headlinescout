@@ -19,6 +19,7 @@ final class App {
 
     public static function install(PDO $db): void {
         $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS sources (
  id INTEGER PRIMARY KEY, name TEXT NOT NULL, homepage_url TEXT NOT NULL UNIQUE,
  interval_seconds INTEGER NOT NULL DEFAULT 900, enabled INTEGER NOT NULL DEFAULT 1,
@@ -44,8 +45,15 @@ CREATE TABLE IF NOT EXISTS appearances (
 CREATE INDEX IF NOT EXISTS headlines_recent ON headlines(last_seen_at DESC);
 CREATE INDEX IF NOT EXISTS scans_source ON scans(source_id,started_at DESC);
 SQL);
-        $seed = $db->prepare('INSERT OR IGNORE INTO sources(name,homepage_url) VALUES(?,?)');
-        foreach ([['CNN','https://www.cnn.com/'],['ZeroHedge','https://www.zerohedge.com/'],['The Gateway Pundit','https://www.thegatewaypundit.com/']] as $source) $seed->execute($source);
+        // Seed defaults only on the first initialization; never resurrect deleted sources.
+        // Existing installations already have sources and simply acquire the seed marker.
+        $newDb = ((int)$db->query('SELECT COUNT(*) FROM sources')->fetchColumn()) === 0;
+        $marker = $db->prepare("INSERT OR IGNORE INTO settings(key,value) VALUES('initial_sources_seeded','1')");
+        $marker->execute();
+        if ($marker->rowCount() > 0 && $newDb) {
+            $seed = $db->prepare('INSERT OR IGNORE INTO sources(name,homepage_url) VALUES(?,?)');
+            foreach ([['CNN','https://www.cnn.com/'],['ZeroHedge','https://www.zerohedge.com/'],['The Gateway Pundit','https://www.thegatewaypundit.com/']] as $source) $seed->execute($source);
+        }
     }
 
     private static function publicUrl(string $url): bool {
@@ -196,7 +204,6 @@ SQL);
             $ct = strtolower($headers['content-type'] ?? '');
             if ($ct && !str_contains($ct,'html')) throw new RuntimeException('Unexpected content type: ' . $ct);
             $items = self::extract($html,$final,$source['selector']);
-            if (count($items) < 3) throw new RuntimeException('Only ' . count($items) . ' candidate headlines: extraction needs review');
             $db->beginTransaction();
             $ins = $db->prepare('INSERT OR IGNORE INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
             $upd = $db->prepare('UPDATE headlines SET title=?,last_seen_at=?,is_current=1 WHERE source_id=? AND url=?');
