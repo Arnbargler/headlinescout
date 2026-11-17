@@ -27,3 +27,12 @@
 button.danger{background:#542635;border:1px solid #9f425b;color:#ffe4eb}
 button.danger:hover{background:#7a2e44}
 @media(max-width:520px){.managed-source{align-items:flex-start;flex-direction:column}}
+
+
+/* Source Lab monitoring and actions */
+.lab-summary{margin:16px 0 24px}
+.lab-summary .source{background:#101a28}
+.source-actions{display:flex;align-items:center;gap:9px;flex-shrink:0}
+.source-actions form{margin:0}
+button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:700px){.lab-summary{grid-template-columns:1fr}}
