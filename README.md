@@ -104,6 +104,12 @@ php -l public/lab.php
 php tests/word-stats.php
 ```
 
+## Top-word headline filter
+
+The dashboard has an **Only headlines with top-count words** checkbox, off by default. When enabled, it displays only current front-page headlines that contain **at least one** word from the union of the three displayed Top 10 Word Count lists (1 hour, 24 hours and 7 days). Matching ignores case and checks whole word tokens, not arbitrary substrings. The top-word lists are calculated from the full stored headline collection and **do not change** when the display checkbox is switched. The checkbox combines with the source dropdown and headline search field, and remains checked until unchecked or the filter is cleared by navigating to the dashboard without its query parameter. If the word lists are empty, no headlines match.
+
+Filtering never changes SQLite data, collection scheduling or a source's maximum 10 current headline links.
+
 ## CNN download-limit adjustment
 
 The original collector had a 3 MB response cap and displayed a confusing cURL write-callback error when CNN exceeded it. The cap is now 12 MB, and any further size failure is explained explicitly. This **does not prove** CNN can be fetched or parsed; re-run the scan on Colossus to verify.
