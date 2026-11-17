@@ -8,14 +8,15 @@
 - [x] Error handling that preserves the last valid front-page state
 - [x] Read-only PHP LAN dashboard, current/history views, search and source filters
 - [x] Install and launch instructions in README
-- [ ] PHP lint and live run on Colossus
+- [ ] PHP lint and live run of latest Source Lab changes on Colossus
 - [ ] Validate robots rules and actual headlines for CNN, ZeroHedge, Gateway Pundit
 - [ ] Tune selectors, exclusions and headline accuracy for each site
 - [ ] Install cron after successful manual test
 
 ## v0.2
 
-- [ ] Source-test preview and configuration editor (authenticated)
+- [x] Authenticated Source Lab: multi-strategy preview and source saving (awaiting Colossus test)
+- [ ] Full source manager (list/edit/disable/remove sources)
 - [ ] Better front-page position/section tracking
 - [ ] Improve robots.txt implementation and add fixture tests
 - [ ] Add source-specific scan health diagnostics
