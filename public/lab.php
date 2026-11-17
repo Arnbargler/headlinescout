@@ -35,6 +35,31 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                 $_SESSION['source_lab_probe']=$probe;
                 $notice='Homepage fetched and six extraction strategies tested. Review results before saving.';
             } catch (Throwable $e) { $error=$e->getMessage(); $probe=null;unset($_SESSION['source_lab_probe']); }
+        } elseif ($action==='scan') {
+            $id=filter_var($_POST['source_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+            if (!$id) $error='Invalid source ID.';
+            else {
+                $find=$db->prepare('SELECT * FROM sources WHERE id=?');
+                $find->execute([$id]);
+                $source=$find->fetch();
+                if (!$source) $error='Source no longer exists.';
+                elseif (!(int)$source['enabled']) $error='Source is disabled.';
+                else {
+                    // Share the exact same lock as the scheduled CLI collector.
+                    $lock=fopen(dirname(__DIR__).'/var/scan.lock','c');
+                    if (!$lock || !flock($lock,LOCK_EX|LOCK_NB)) {
+                        if (is_resource($lock)) fclose($lock);
+                        $error='Another scan is running. Try again when it finishes.';
+                    } else {
+                        try {
+                            $result=App::scan($db,$source);
+                            if ($result['status']==='success')
+                                $notice=$result['source'].': scanned successfully; '.$result['found'].' current headlines ('.$result['added'].' new).';
+                            else $error=$result['source'].': scan failed — '.$result['error'];
+                        } finally { flock($lock,LOCK_UN); fclose($lock); }
+                    }
+                }
+            }
         } elseif ($action==='delete') {
             $id=filter_var($_POST['source_id']??null,FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
             $confirmation=(string)($_POST['confirm_name']??'');
@@ -136,17 +161,32 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <p class="fine">No scan is triggered when saving. Run <code>php bin/scan.php --all</code> to test ingestion.</p></section>
 <?php endif;?>
 <?php
-$existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled, COUNT(h.id) AS headline_count FROM sources s LEFT JOIN headlines h ON h.source_id=s.id GROUP BY s.id ORDER BY s.id')->fetchAll();
+$existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_status,s.last_scan_at,s.last_error, COUNT(h.id) AS headline_count, COALESCE(SUM(CASE WHEN h.is_current=1 THEN 1 ELSE 0 END),0) AS current_count FROM sources s LEFT JOIN headlines h ON h.source_id=s.id GROUP BY s.id ORDER BY s.id')->fetchAll();
 ?>
 <section class="panel formpanel"><h2>MANAGE SOURCES</h2>
-<p>Remove a source and all its stored headlines, appearances and scan history. This cannot be undone. Default sources will not automatically return.</p>
+<p>Each source keeps its 10 highest matching links in page order per scan. Scan now refreshes that source immediately; Remove permanently deletes its headlines, appearances and scan history. Deleted default sources will not return.</p>
 <?php if(!$existingSources):?><p>No sources configured.</p><?php endif;?>
+<div class="summary lab-summary">
+<?php foreach($existingSources as $s): ?>
+<div class="source"><div class="source-top"><strong><?=h($s['name'])?></strong><span class="state <?=h($s['last_status']??'pending')?>"><?=h($s['last_status']??'pending')?></span></div>
+<div class="count"><?= (int)$s['current_count'] ?> <small>current headlines</small></div>
+<div class="meta">Last scan: <?= $s['last_scan_at']?h(gmdate('M j, H:i',strtotime($s['last_scan_at']))).' UTC':'never' ?></div>
+<?php if($s['last_error']): ?><div class="error" title="<?=h($s['last_error'])?>"><?=h($s['last_error'])?></div><?php endif;?></div>
+<?php endforeach; ?>
+</div>
 <div class="managed-sources">
 <?php foreach($existingSources as $s): ?>
 <div class="managed-source">
   <div class="managed-source-info"><strong><?=h($s['name'])?></strong>
     <div class="meta"><?=h($s['homepage_url'])?> · <?= (int)$s['headline_count'] ?> saved headlines</div>
   </div>
+  <div class="source-actions">
+  <form method="post">
+    <input type="hidden" name="csrf" value="<?=h(csrf())?>">
+    <input type="hidden" name="action" value="scan">
+    <input type="hidden" name="source_id" value="<?=(int)$s['id']?>">
+    <button type="submit" <?=!(int)$s['enabled']?'disabled':''?>>Scan now</button>
+  </form>
   <form method="post" onsubmit="return confirm('Permanently delete this source and ALL its stored headlines and scan history?')">
     <input type="hidden" name="csrf" value="<?=h(csrf())?>">
     <input type="hidden" name="action" value="delete">
@@ -155,6 +195,7 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled, COUNT(
     <input type="hidden" name="confirm_name" value="<?=h($s['name'])?>">
     <button class="danger" type="submit">Remove</button>
   </form>
+  </div>
 </div>
 <?php endforeach;?>
 </div></section>
