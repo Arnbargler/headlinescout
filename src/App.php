@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS appearances (
 CREATE INDEX IF NOT EXISTS headlines_recent ON headlines(last_seen_at DESC);
 CREATE INDEX IF NOT EXISTS scans_source ON scans(source_id,started_at DESC);
 SQL);
+        require_once __DIR__ . '/WordStats.php';
+        WordStats::install($db);
         // Seed defaults only on the first initialization; never resurrect deleted sources.
         // Existing installations already have sources and simply acquire the seed marker.
         $newDb = ((int)$db->query('SELECT COUNT(*) FROM sources')->fetchColumn()) === 0;
