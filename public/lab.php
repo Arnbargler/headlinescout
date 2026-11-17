@@ -8,26 +8,13 @@ session_start(['cookie_httponly'=>true,'cookie_samesite'=>'Strict','use_strict_m
 function h(mixed $v): string {return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
 function csrf(): string {return $_SESSION['csrf']??=bin2hex(random_bytes(24));}
 $db=App::db(); App::install($db);
-$keyFile=dirname(__DIR__).'/var/source-lab.key';
-$authenticated=!empty($_SESSION['source_lab_auth']);
 $error=null;$notice=null;$probe=$_SESSION['source_lab_probe']??null;
 if ($_SERVER['REQUEST_METHOD']==='POST') {
     if (!hash_equals(csrf(),(string)($_POST['csrf']??''))) {
         $error='Invalid form token; reload the page.';
     } else {
         $action=(string)($_POST['action']??'');
-        if ($action==='login') {
-            if (!is_file($keyFile)) $error='Run php bin/lab-key.php on Colossus first.';
-            elseif (hash_equals(trim(file_get_contents($keyFile)),(string)($_POST['key']??''))) {
-                session_regenerate_id(true);
-                $_SESSION['source_lab_auth']=true; $authenticated=true;
-                $notice='Source Lab unlocked.';
-            } else $error='Incorrect access key.';
-        } elseif (!$authenticated) $error='Unlock Source Lab first.';
-        elseif ($action==='logout') {
-            unset($_SESSION['source_lab_auth'],$_SESSION['source_lab_probe']);
-            $authenticated=false;$probe=null;$notice='Locked.';
-        } elseif ($action==='test') {
+        if ($action==='test') {
             try {
                 $url=trim((string)($_POST['url']??''));
                 if (strlen($url)>500) throw new RuntimeException('URL too long');
@@ -126,13 +113,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <p class="intro">Test a potential news homepage, compare six HTML extraction strategies, inspect candidate headlines, then save a selected method. This tests front-page content only; it does not use RSS or bypass site restrictions.</p>
 <?php if($error):?><div class="alert error"><?=h($error)?></div><?php endif;?>
 <?php if($notice):?><div class="alert notice"><?=h($notice)?></div><?php endif;?>
-<?php if(!$authenticated):?>
-<section class="panel formpanel"><h2>UNLOCK SOURCE LAB</h2><p>Source testing fetches external URLs and source editing changes collection settings. These controls are locked behind a key generated locally on Colossus.</p>
-<p>Run <code>php bin/lab-key.php</code> from your project directory and enter the displayed key.</p>
-<form method="post"><input type="hidden" name="csrf" value="<?=h(csrf())?>"><input type="hidden" name="action" value="login"><label>Access key <input name="key" type="password" required autocomplete="off"></label><button type="submit">Unlock</button></form>
-</section>
-<?php else:?>
-<form method="post" class="logout"><input type="hidden" name="csrf" value="<?=h(csrf())?>"><input type="hidden" name="action" value="logout"><button type="submit">Lock lab</button></form>
 <section class="panel formpanel"><h2>TEST A HOMEPAGE</h2>
 <form method="post" class="lab-form"><input type="hidden" name="csrf" value="<?=h(csrf())?>"><input type="hidden" name="action" value="test">
 <label>Website URL <input type="url" name="url" placeholder="https://example.com/" value="<?=h($probe['url']??'')?>" required maxlength="500"></label>
@@ -200,5 +180,4 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_
 <?php endforeach;?>
 </div></section>
 
-<?php endif;?>
 </main></body></html>
