@@ -5,7 +5,8 @@
 - [x] CLI scheduler (`bin/scan.php`) with 15-minute per-source polling and lock
 - [x] SQLite schema, seed sources, scan history and headline appearances
 - [x] cURL fetcher, conservative robots checks, bounded redirects and XPath extraction
-- [x] Error handling that preserves the last valid front-page state
+- [x] Error handling that preserves the last valid front-page state on transport/parse failures
+- [x] Allow 0–2 headline results without a minimum-count error (zero successful matches clear current status)
 - [x] Read-only PHP LAN dashboard, current/history views, search and source filters
 - [x] Install and launch instructions in README
 - [ ] PHP lint and live run of latest Source Lab changes on Colossus
@@ -16,7 +17,8 @@
 ## v0.2
 
 - [x] Authenticated Source Lab: multi-strategy preview and source saving (awaiting Colossus test)
-- [ ] Full source manager (list/edit/disable/remove sources)
+- [x] List and permanently remove sources in Source Lab (with dependent history cleanup)
+- [ ] Full source manager (edit/disable sources)
 - [ ] Better front-page position/section tracking
 - [ ] Improve robots.txt implementation and add fixture tests
 - [ ] Add source-specific scan health diagnostics
