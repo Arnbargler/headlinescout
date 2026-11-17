@@ -25,7 +25,7 @@ function verify(bool $yes,string $message):void {
 verify(($one['rocket']??0)===1,'Ignored phrase should remove its rocket while keeping separate rocket mention');
 verify(isset($one['boosters'])&&$one['boosters']===1,'Word after ignored phrase must remain');
 verify(($day['rocket']??0)===2,'Twenty-four-hour window includes two distinct rocket mentions');
-verify(($week['rocket']??0)===3,'7-day range counts distinct headlines without old month');
+verify(($week['rocket']??0)===2,'7-day range excludes ignored phrase and older month');
 verify(!isset($week['the'])&&!isset($week['with']),'Default ignored words are omitted');
 $id=$db->query("SELECT id FROM ignored_terms WHERE term='rocket launch'")->fetchColumn();
 verify(WordStats::remove($db,(int)$id),'Ignore phrase should be removable');
