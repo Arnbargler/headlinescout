@@ -22,12 +22,12 @@ $week=WordStats::top($db,168,$ignored);
 function verify(bool $yes,string $message):void {
     if (!$yes) {fwrite(STDERR,"FAIL: $message\n");exit(1);}
 }
-verify(!isset($one['rocket']),'Ignored phrase should remove rocket from phrase in latest title');
+verify(($one['rocket']??0)===1,'Ignored phrase should remove its rocket while keeping separate rocket mention');
 verify(isset($one['boosters'])&&$one['boosters']===1,'Word after ignored phrase must remain');
-verify(isset($day['rocket'])&&$day['rocket']===1,'Yesterday rocket mention counted once');
-verify(($week['rocket']??0)===2,'7-day range counts unique titles without old month');
+verify(($day['rocket']??0)===2,'Twenty-four-hour window includes two distinct rocket mentions');
+verify(($week['rocket']??0)===3,'7-day range counts distinct headlines without old month');
 verify(!isset($week['the'])&&!isset($week['with']),'Default ignored words are omitted');
 $id=$db->query("SELECT id FROM ignored_terms WHERE term='rocket launch'")->fetchColumn();
 verify(WordStats::remove($db,(int)$id),'Ignore phrase should be removable');
-verify(($week=WordStats::top($db,168,WordStats::ignored($db)))['rocket']===3,'Removed phrase restores counts');
+verify(($week=WordStats::top($db,168,WordStats::ignored($db)))['rocket']===4,'Removed phrase restores counts');
 echo "PASS: word frequency, time windows, ignored words and phrases\n";
