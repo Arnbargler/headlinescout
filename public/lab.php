@@ -35,12 +35,40 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
                 $_SESSION['source_lab_probe']=$probe;
                 $notice='Homepage fetched and six extraction strategies tested. Review results before saving.';
             } catch (Throwable $e) { $error=$e->getMessage(); $probe=null;unset($_SESSION['source_lab_probe']); }
+        } elseif ($action==='delete') {
+            $id=filter_var($_POST['source_id']??null,FILTER_VALIDATE_INT, ['options'=>['min_range'=>1]]);
+            $confirmation=(string)($_POST['confirm_name']??'');
+            if (!$id) $error='Invalid source ID.';
+            else {
+                $find=$db->prepare('SELECT name FROM sources WHERE id=?');
+                $find->execute([$id]);
+                $sourceName=$find->fetchColumn();
+                if ($sourceName===false) $error='Source no longer exists.';
+                elseif (!hash_equals((string)$sourceName,$confirmation)) $error='Confirmation did not match the source name.';
+                else {
+                    try {
+                        $db->beginTransaction();
+                        $deleteAppearances=$db->prepare('DELETE FROM appearances WHERE headline_id IN (SELECT id FROM headlines WHERE source_id=?) OR scan_id IN (SELECT id FROM scans WHERE source_id=?)');
+                        $deleteAppearances->execute([$id,$id]);
+                        $db->prepare('DELETE FROM headlines WHERE source_id=?')->execute([$id]);
+                        $db->prepare('DELETE FROM scans WHERE source_id=?')->execute([$id]);
+                        $db->prepare('DELETE FROM sources WHERE id=?')->execute([$id]);
+                        $db->commit();
+                        $notice='Removed '.$sourceName.' and its collected headlines and scan history.';
+                        if ($probe && $probe['url']===$_POST['source_url']) {
+                            $probe=null; unset($_SESSION['source_lab_probe']);
+                        }
+                    } catch (Throwable $e) {
+                        if ($db->inTransaction()) $db->rollBack();
+                        $error='Could not remove source: '.$e->getMessage();
+                    }
+                }
+            }
         } elseif ($action==='save') {
             if (!$probe) $error='Test a site first.';
             else {
                 $method=(string)($_POST['method']??'');
                 if (!isset(SourceLab::METHODS[$method])) $error='Unknown method.';
-                elseif (($probe['methods'][$method]['count']??0)<3) $error='This method found fewer than three candidates.';
                 else {
                     $url=$probe['url'];
                     $name=trim((string)($_POST['name']??''));
@@ -107,5 +135,29 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <button type="submit">Save source / method</button></form>
 <p class="fine">No scan is triggered when saving. Run <code>php bin/scan.php --all</code> to test ingestion.</p></section>
 <?php endif;?>
+<?php
+$existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled, COUNT(h.id) AS headline_count FROM sources s LEFT JOIN headlines h ON h.source_id=s.id GROUP BY s.id ORDER BY s.id')->fetchAll();
+?>
+<section class="panel formpanel"><h2>MANAGE SOURCES</h2>
+<p>Remove a source and all its stored headlines, appearances and scan history. This cannot be undone. Default sources will not automatically return.</p>
+<?php if(!$existingSources):?><p>No sources configured.</p><?php endif;?>
+<div class="managed-sources">
+<?php foreach($existingSources as $s): ?>
+<div class="managed-source">
+  <div class="managed-source-info"><strong><?=h($s['name'])?></strong>
+    <div class="meta"><?=h($s['homepage_url'])?> · <?= (int)$s['headline_count'] ?> saved headlines</div>
+  </div>
+  <form method="post" onsubmit="return confirm('Permanently delete <?=h(addslashes($s['name']))?> and ALL its stored headlines and history?')">
+    <input type="hidden" name="csrf" value="<?=h(csrf())?>">
+    <input type="hidden" name="action" value="delete">
+    <input type="hidden" name="source_id" value="<?=(int)$s['id']?>">
+    <input type="hidden" name="source_url" value="<?=h($s['homepage_url'])?>">
+    <input type="hidden" name="confirm_name" value="<?=h($s['name'])?>">
+    <button class="danger" type="submit">Remove</button>
+  </form>
+</div>
+<?php endforeach;?>
+</div></section>
+
 <?php endif;?>
 </main></body></html>
