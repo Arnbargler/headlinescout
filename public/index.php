@@ -17,7 +17,7 @@ foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
 // Union of the three displayed top-ten word lists; ignore repeated words.
 $trendingWords=[];
 foreach ($wordStats as $period) {
-    foreach ($period['words'] as $word=>$count) $trendingWords[mb_strtolower($word,'UTF-8')]=true;
+    foreach ($period['words'] as $word=>$count) $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
 }
 $trendingOnly=(($_GET['trending']??'')==='1');
 $matchesTrending=static function (string $title) use ($trendingWords): bool {
