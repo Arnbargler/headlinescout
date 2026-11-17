@@ -9,6 +9,11 @@ $q=trim((string)($_GET['q']??''));
 $sources=$db->query('SELECT id,name,last_success_at,last_status FROM sources WHERE enabled=1 ORDER BY id')->fetchAll();
 $lastSuccess=$sources ? max(array_map(fn($s)=>strtotime($s['last_success_at']??'')?:0,$sources)) : 0;
 $errors=array_filter($sources,fn($s)=>$s['last_status']==='error');
+$ignored=\HeadlineScout\WordStats::ignored($db);
+$wordStats=[];
+foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
+    $wordStats[]=['label'=>$label,'words'=>\HeadlineScout\WordStats::top($db,$hours,$ignored)];
+}
 $sections=[];
 $visibleCount=0;
 // For each source, use its most recent SUCCESSFUL scan, not the complete historical
@@ -38,6 +43,19 @@ foreach ($sources as $source) {
 <body>
 <header><div class="shell top"><div><div class="eyebrow">FRONT PAGE INTELLIGENCE</div><h1>HEADLINE<span>SCOUT</span></h1></div><div class="health"><a class="navlink" href="/lab.php">Source Lab →</a><br><span class="led"></span> <?=count($sources)?> sources · <?=count($errors)?> errors<br><small>Last success: <?= $lastSuccess?e(gmdate('M j, H:i',$lastSuccess)).' UTC':'Not yet scanned' ?></small></div></div></header>
 <main class="shell">
+<section class="word-stats">
+<div class="word-stats-title"><h2>WORD COUNT</h2><span>Headline titles first collected within each rolling period · ignored words excluded</span></div>
+<div class="word-stats-grid">
+<?php foreach($wordStats as $period): ?>
+<div class="word-period"><h3><?=e($period['label'])?></h3>
+<?php if(!$period['words']):?><p class="word-empty">No matching words yet.</p><?php else:?>
+<ol class="word-ranking"><?php foreach($period['words'] as $word=>$count):?>
+<li><span class="word-label"><?=e($word)?></span><strong class="word-total"><?=(int)$count?></strong></li>
+<?php endforeach;?></ol>
+<?php endif;?></div>
+<?php endforeach;?>
+</div></section>
+
 <section class="panel">
 <div class="panel-head"><h2>CURRENT FRONT PAGES</h2><span><?=$visibleCount?> headlines · up to 10 per source</span></div>
 <form method="get" class="filters">
