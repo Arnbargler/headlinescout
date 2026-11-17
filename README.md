@@ -87,6 +87,23 @@ The dashboard displays **only the latest successful scan's first 10 headlines pe
 
 Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
+## Word count dashboard
+
+The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows measured from the current UTC time, based on the `first_seen_at` timestamp of **unique stored headlines**. A headline contributes its title only once, even if the same link appears in multiple scans. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current ten per source**, and are independent of the dashboard source/search filters.
+
+The default ignored-word list includes ordinary English stop words such as `the`, `a`, `for`, `with`, etc. In **Source Lab → Word Count — Ignore List**, you can add either a word or phrase and remove existing entries. Matching is case-insensitive. Ignored phrases are removed as whole sequences before remaining words are counted, e.g., ignoring `breaking news` removes both words only when adjacent as that phrase. The defaults are seeded only once; removing one does not cause it to reappear. Edits take effect on the next dashboard load without changing any saved headlines.
+
+No full-article text or AI inference is involved: these are raw statistics from collected headline titles. There is no minimum frequency required. All periods show up to ten results, ranked by descending mentions and alphabetically for ties.
+
+Regression check after pulling:
+
+```bash
+php -l src/WordStats.php
+php -l public/index.php
+php -l public/lab.php
+php tests/word-stats.php
+```
+
 ## CNN download-limit adjustment
 
 The original collector had a 3 MB response cap and displayed a confusing cURL write-callback error when CNN exceeded it. The cap is now 12 MB, and any further size failure is explained explicitly. This **does not prove** CNN can be fetched or parsed; re-run the scan on Colossus to verify.
@@ -102,6 +119,7 @@ The original collector had a 3 MB response cap and displayed a confusing cURL wr
 - Error handling that preserves the previous valid homepage state
 - LAN web dashboard with current top-ten per-source groups, source filtering, and search across those current headlines
 - Read-only dashboard plus Source Lab for test/preview and source editing
+- Three rolling headline word-frequency lists (1h / 24h / 7d) and editable ignore terms in Source Lab
 - No AI dependency
 
 ## Known limitations
