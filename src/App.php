@@ -189,7 +189,7 @@ SQL);
             if (mb_strlen($title) < 18 || mb_strlen($title) > 300) continue;
             $link = preg_replace('/#.*$/','',$link);
             if (!isset($out[$link])) $out[$link] = ['url'=>$link,'title'=>$title];
-            if (count($out) >= 120) break;
+            if (count($out) >= 10) break;
         }
         return array_values($out);
     }
