@@ -1,78 +1,113 @@
 # HeadlineScout
 
-A self-hosted **front-page headline monitor**. HeadlineScout periodically inspects the homepages of selected publications, extracts their headline links, records front-page appearances, and presents a chronological, searchable dashboard.
+**A self-hosted front-page headline monitor.** PHP + SQLite, intended to run as a LAN web application on **Colossus** and later on a PHP web host.
 
-**Status:** Planning/scaffold only — no working collector or web application yet.
+**Status: v0.1 first implementation committed; not yet tested on Colossus.** No guarantees that the initial sites will allow automated retrieval or match the generic extraction selector. The dashboard is a read-only web app; scanning runs separately.
 
-## Initial scope (v0.1)
+## Initial sources
 
-- Monitor **front pages**, not every published article and not complete RSS feeds.
-- Initial sources: [CNN](https://www.cnn.com/), [ZeroHedge](https://www.zerohedge.com/), [The Gateway Pundit](https://www.thegatewaypundit.com/).
-- Poll each enabled source every **15 minutes** on Colossus; consider **30 minutes** when moved to external hosting. Source-specific intervals can override the default.
-- Preserve headline URLs, titles, first/last seen timestamps, and front-page section/position where extraction permits.
-- Track scan health and distinguish a successful empty extraction from transport errors.
-- A minimal web dashboard will display collected headlines and link to original articles.
-- AI analysis is a **later, optional** feature, not required for collection.
+- [CNN](https://www.cnn.com/)
+- [ZeroHedge](https://www.zerohedge.com/)
+- [The Gateway Pundit](https://www.thegatewaypundit.com/)
 
-## Proposed stack
+The goal is **what appears on the homepage**, not a full published-article RSS archive. Collection is every **15 minutes** on Colossus; move to **30 minutes** on an external host by adjusting \`sources.interval_seconds\` to 1800.
 
-- PHP 8.4+ (PHP CLI collector and web backend)
-- SQLite via PDO
-- cURL for HTTP requests; DOM/XPath for HTML parsing
-- HTML, CSS, and vanilla JavaScript for the UI
-- cron for scheduling; a one-minute scheduler tick can select due sources
-- Optional llama.cpp-compatible HTTP endpoint for local AI on Colossus
+## First-run instructions (Colossus / Ubuntu Server)
 
-Do not assume any of the three homepages is currently scrapeable from the target machine. Verify HTTP status, robots rules, actual markup, and extraction accuracy before implementing a production selector. Prefer direct homepage extraction over feeds because front-page prominence is the core requirement.
+Install PHP CLI and required extensions, Git, SQLite tools:
 
-## Planned layout
+\`\`\`bash
+sudo apt update
+sudo apt install -y php-cli php-curl php-sqlite3 php-xml php-mbstring git sqlite3
+\`\`\`
 
-```text
-headlinescout/
-├── README.md
-├── .gitignore
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DATA_MODEL.md
-│   ├── ROADMAP.md
-│   └── SOURCES.md
-├── config/
-│   └── .gitkeep
-├── bin/
-│   └── .gitkeep
-├── public/
-│   └── .gitkeep
-├── src/
-│   └── .gitkeep
-├── database/
-│   └── .gitkeep
-├── tests/
-│   └── .gitkeep
-└── var/
-    └── .gitkeep
-```
+Clone into your home directory; this avoids making the project tree root-owned:
 
-The `public/` directory alone should be served over HTTP. Database files, configuration, logs and article text must stay outside the web root. `var/` will hold writable runtime state.
+\`\`\`bash
+cd ~
+git clone https://github.com/Arnbargler/headlinescout.git
+cd headlinescout
+php -v
+php -l src/App.php
+php -l bin/scan.php
+php -l public/index.php
+\`\`\`
 
-## Development sequence
+Initialize the database and **run one first scan** (tries all enabled sources; may take a while if sites refuse access):
 
-1. Run HTTP/robots/HTML extraction tests against the three sources **from Colossus**.
-2. Define source-specific selectors and validate a headline preview.
-3. Add SQLite schema, idempotent ingestion, and scan logs.
-4. Implement scheduled collection and basic dashboard.
-5. Add source management, read/unread, filtering, diagnostics.
-6. Integrate optional article-on-demand analysis with local AI.
+\`\`\`bash
+php bin/scan.php --all
+\`\`\`
 
-See [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), [sources](docs/SOURCES.md), and [roadmap](docs/ROADMAP.md).
+This creates \`var/headlines.sqlite\`, sets up tables, seeds the three sources and prints a JSON status line for each attempt. Errors are recorded per source. If a site denies robots access, returns a block page, or no longer matches the selector, that is **reported as an error** rather than being logged as an empty successful front page.
 
-## Deployment intentions
+Start the LAN web app on port **8090**:
 
-Initial target: Ubuntu Server on **Colossus** at home. Future target: conventional PHP hosting with SQLite, CLI access, and cron. Keep settings environment-based and avoid assumptions about local machine paths or a specific web server.
+\`\`\`bash
+php -S 0.0.0.0:8090 -t public
+\`\`\`
 
-## Security and responsible collection
+From another device in your home network browse to:
 
-Respect robots.txt and site terms, keep request rates modest, avoid access-control circumvention, use timeouts and size limits, reject private/loopback destinations from user-configurable URLs (SSRF), and never expose the SQLite database via the website. AI output must distinguish verifiable facts, interpretations, and speculative scenarios.
+- \`http://colossus.local:8090/\` (if local mDNS name resolution works)
+- \`http://<COLOSSUS-LAN-IP>:8090/\` otherwise
 
-## Non-goals for v0.1
+The PHP development server is suitable for the initial **trusted-LAN experiment only** and runs in the foreground. Use Ctrl-C to stop it. Do **not** forward this port to the Internet. For a persistent service or public hosting, configure Apache/Nginx with \`public/\` as its sole document root and add authentication before exposure.
 
-No bulk article archives, headless browsers, login/paywall bypass, automatic fact-checking claims, or AI-dependent scraping.
+If UFW blocks LAN access, inspect your rules with \`sudo ufw status\`. Where appropriate, allow TCP 8090 **only from your LAN subnet**, not globally.
+
+## Periodic scanning
+
+After the initial manual test works, schedule one run per minute. The script skips sources not due, so each website normally gets checked every 900 seconds. It uses \`flock\` to avoid overlapping collection.
+
+Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux login):
+
+\`\`\`cron
+* * * * * /usr/bin/php /home/YOUR_USER/headlinescout/bin/scan.php >> /home/YOUR_USER/headlinescout/var/cron.log 2>&1
+\`\`\`
+
+**Do not install cron until the first manual scan has been examined.** The first three sources are intentionally unverified. Once deployed externally, use a provider cron facility and consider 1800-second source intervals.
+
+## What works in v0.1
+
+- Automatic SQLite creation and initial source seeding
+- cURL homepage fetching with explicit limits, timeouts, and bounded redirects
+- Conservative robots.txt check; fail closed when robots status cannot be established
+- DOM/XPath heading-link extraction, local-domain filtering, basic exclusions
+- Stored headline first/last seen timestamps and \`is_current\` state
+- Scan history and per-scan appearance position
+- Error handling that preserves the previous valid homepage state
+- LAN web dashboard with current/history, source filtering, search, scan health
+- Read-only web interface: no public scan trigger or unauthenticated source editing
+- No AI dependency
+
+## Known limitations
+
+- Source-specific selectors have **not yet been validated against Colossus's actual fetched pages**. Some or all three sources may currently return errors; their markup or policies can change. The generic selector may collect unwanted links.
+- A source requires at least 3 valid headline candidates to count as a successful scan; this is a temporary safety threshold.
+- No automated testing, browser-based source editor, read/unread, article extraction or AI analysis yet.
+- Robots policy implementation covers straightforward allow/disallow patterns but is not yet a full RFC 9309 implementation. Review against each site's actual policies before unattended polling.
+- Basic SSRF validation is included, but this prototype is not a hardened public multi-user crawler.
+
+## Code layout
+
+\`\`\`text
+bin/scan.php          scheduled CLI collector (--all forces immediate scans)
+src/App.php           SQLite setup, HTTP fetch, robots check, XPath extraction, ingest
+public/index.php      read-only dashboard
+public/style.css      dashboard styling
+var/                  runtime SQLite and logs (gitignored)
+docs/                 architecture, data model, sources, roadmap
+\`\`\`
+
+SQLite files and secrets must stay **outside** the public document root.
+
+## Next steps
+
+1. Test all three sources from Colossus and record failures / extracted headline quality.
+2. Add reliable source-specific XPath selectors and section detection.
+3. Add a basic source-test/preview CLI or authenticated admin UI.
+4. Stabilize collection on LAN, then configure cron and a persistent web server.
+5. Eventually attach local Colossus llama.cpp AI for on-demand article summaries and clearly labeled speculation.
+
+See [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), [roadmap](docs/ROADMAP.md) and [sources](docs/SOURCES.md).
