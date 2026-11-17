@@ -189,7 +189,7 @@ SQL);
             if (mb_strlen($title) < 18 || mb_strlen($title) > 300) continue;
             $link = preg_replace('/#.*$/','',$link);
             if (!isset($out[$link])) $out[$link] = ['url'=>$link,'title'=>$title];
-            if (count($out) >= 10) break;
+            if (count($out) >= 120) break;
         }
         return array_values($out);
     }
@@ -203,7 +203,7 @@ SQL);
             if ($http !== 200) throw new RuntimeException('HTTP status ' . $http);
             $ct = strtolower($headers['content-type'] ?? '');
             if ($ct && !str_contains($ct,'html')) throw new RuntimeException('Unexpected content type: ' . $ct);
-            $items = self::extract($html,$final,$source['selector']);
+            $items = array_slice(self::extract($html,$final,$source['selector']), 0, 10);
             $db->beginTransaction();
             $ins = $db->prepare('INSERT OR IGNORE INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
             $upd = $db->prepare('UPDATE headlines SET title=?,last_seen_at=?,is_current=1 WHERE source_id=? AND url=?');
