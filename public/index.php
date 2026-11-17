@@ -7,8 +7,6 @@ function e(mixed $value): string { return htmlspecialchars((string)$value, ENT_Q
 $sourceFilter=filter_input(INPUT_GET,'source',FILTER_VALIDATE_INT) ?: 0;
 $q=trim((string)($_GET['q']??''));
 $sources=$db->query('SELECT id,name,last_success_at,last_status FROM sources WHERE enabled=1 ORDER BY id')->fetchAll();
-$lastSuccess=$sources ? max(array_map(fn($s)=>strtotime($s['last_success_at']??'')?:0,$sources)) : 0;
-$errors=array_filter($sources,fn($s)=>$s['last_status']==='error');
 $ignored=\HeadlineScout\WordStats::ignored($db);
 $wordStats=[];
 foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
@@ -58,7 +56,7 @@ foreach ($sources as $source) {
 <meta http-equiv="refresh" content="300">
 <title>HeadlineScout</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="shell top"><div><div class="eyebrow">FRONT PAGE INTELLIGENCE</div><h1>HEADLINE<span>SCOUT</span></h1></div><div class="health"><a class="navlink" href="/lab.php">Source Lab →</a><br><span class="led"></span> <?=count($sources)?> sources · <?=count($errors)?> errors<br><small>Last success: <?= $lastSuccess?e(gmdate('M j, H:i',$lastSuccess)).' UTC':'Not yet scanned' ?></small></div></div></header>
+<header><div class="shell top"><h1 class="site-title">Headline<span>Scout</span></h1><a class="header-button" href="/lab.php"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.91 1.91-.06-.06A1.65 1.65 0 0 0 16 18.4a1.65 1.65 0 0 0-1 1.52V20h-2.7v-.08a1.65 1.65 0 0 0-1.06-1.52 1.65 1.65 0 0 0-1.81.33l-.06.06-1.91-1.91.06-.06A1.65 1.65 0 0 0 7.86 15a1.65 1.65 0 0 0-1.52-1H6v-2.7h.34a1.65 1.65 0 0 0 1.52-1.06 1.65 1.65 0 0 0-.33-1.81l-.06-.06 1.91-1.91.06.06a1.65 1.65 0 0 0 1.81.33A1.65 1.65 0 0 0 12.3 5.3V5h2.7v.3a1.65 1.65 0 0 0 1.06 1.52 1.65 1.65 0 0 0 1.81-.33l.06-.06 1.91 1.91-.06.06a1.65 1.65 0 0 0-.33 1.81 1.65 1.65 0 0 0 1.52 1.06H21v2.7h-.03A1.65 1.65 0 0 0 19.4 15Z"/></svg><span>Settings</span></a></div></header>
 <main class="shell">
 <section class="word-stats">
 <div class="word-stats-title"><h2>WORD COUNT</h2><span>Headline titles first collected within each rolling period · ignored words excluded</span></div>
