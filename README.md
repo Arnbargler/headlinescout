@@ -80,7 +80,9 @@ cd ~/headlinescout
 php bin/lab-key.php
 ```
 
-Enter the displayed access key in Source Lab. Then paste a homepage URL and press **Test extraction methods**. The app fetches the homepage **once** (after checking robots.txt) and tries six approaches against that same HTML: heading links, article links, headline-class links, links inside headline blocks, main heading links, and all on-site links (diagnostic only). You can preview up to 35 candidate links per method, choose one, name the source, and save it. If the homepage URL is already registered, saving updates its selector and enables it. The collector will scan the new settings on its next due run, or immediately with `php bin/scan.php --all`.
+Enter the displayed access key in Source Lab. The **Manage Sources** section allows you to permanently remove a source. Deletion requires a confirmation and removes that source's collected headlines, front-page appearances, and scan history. The three initial sources are seeded only on initial database setup, so removed defaults do not reappear.
+
+Then paste a homepage URL and press **Test extraction methods**. The app fetches the homepage **once** (after checking robots.txt) and tries six approaches against that same HTML: heading links, article links, headline-class links, links inside headline blocks, main heading links, and all on-site links (diagnostic only). You can preview up to 35 candidate links per method, choose one (even if it returns zero candidates), name the source, and save it. If the homepage URL is already registered, saving updates its selector and enables it. The collector will scan the new settings on its next due run, or immediately with `php bin/scan.php --all`.
 
 The suggested method is based on crude candidate counts, **not a trustworthy quality ranking**. Inspect the actual preview before saving. HTTP errors, disallowed robots rules, and pages with no matching links are shown as diagnostics. Browser testing does not modify collected headlines or mark source scans successful.
 
@@ -106,7 +108,7 @@ The original collector had a 3 MB response cap and displayed a confusing cURL wr
 ## Known limitations
 
 - Source-specific selectors have **not yet been validated against Colossus's actual fetched pages**. Some or all three sources may currently return errors; their markup or policies can change. The generic selector may collect unwanted links.
-- A source requires at least 3 valid headline candidates to count as a successful scan; this is a temporary safety threshold.
+- There is no minimum headline count: 0, 1, and 2 extracted headlines can be saved and a zero-headline scan counts as successful if fetching/parsing succeeds. **Caution:** a zero-headline successful scan marks that source's previously current headlines as no longer current. Review source extraction methods carefully.
 - No automated test suite, full source management UI, read/unread, article extraction or AI analysis yet.
 - Robots policy implementation covers straightforward allow/disallow patterns but is not yet a full RFC 9309 implementation. Review against each site's actual policies before unattended polling.
 - Basic SSRF validation is included, but this prototype is not a hardened public multi-user crawler.
