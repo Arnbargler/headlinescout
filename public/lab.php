@@ -14,7 +14,20 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
         $error='Invalid form token; reload the page.';
     } else {
         $action=(string)($_POST['action']??'');
-        if ($action==='test') {
+        if ($action==='ignore_add') {
+            try {
+                $term=(string)($_POST['term']??'');
+                $notice=\HeadlineScout\WordStats::add($db,$term)
+                    ? 'Added ignore entry: '.\HeadlineScout\WordStats::normalize($term)
+                    : 'That entry is already in the ignore list.';
+            } catch (Throwable $e) { $error=$e->getMessage(); }
+        } elseif ($action==='ignore_remove') {
+            $id=filter_var($_POST['ignore_id']??null,FILTER_VALIDATE_INT,['options'=>['min_range'=>1]]);
+            if (!$id) $error='Invalid ignore entry.';
+            else $notice=\HeadlineScout\WordStats::remove($db,$id)
+                ? 'Ignore entry removed; dashboard counts will update.'
+                : 'Ignore entry was already removed.';
+        } elseif ($action==='test') {
             try {
                 $url=trim((string)($_POST['url']??''));
                 if (strlen($url)>500) throw new RuntimeException('URL too long');
@@ -179,5 +192,27 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_
 </div>
 <?php endforeach;?>
 </div></section>
+
+<section class="panel formpanel"><h2>WORD COUNT — IGNORE LIST</h2>
+<p>Ignored words and phrases are excluded from the dashboard's 1-hour, 24-hour and 7-day counts. Add a single word or an exact phrase. Changes take effect on the next dashboard refresh and do not change stored headlines.</p>
+<form method="post" class="lab-form ignore-add">
+<input type="hidden" name="csrf" value="<?=h(csrf())?>">
+<input type="hidden" name="action" value="ignore_add">
+<label>Word or phrase <input name="term" type="text" maxlength="100" required placeholder="e.g. the, breaking news"></label>
+<button type="submit">Add to ignore list</button></form>
+<?php $ignoredTerms=\HeadlineScout\WordStats::ignored($db); ?>
+<div class="ignore-tags">
+<?php foreach($ignoredTerms as $ignored): ?>
+<form method="post" class="ignore-tag">
+<input type="hidden" name="csrf" value="<?=h(csrf())?>">
+<input type="hidden" name="action" value="ignore_remove">
+<input type="hidden" name="ignore_id" value="<?=(int)$ignored['id']?>">
+<span><?=h($ignored['term'])?></span>
+<button type="submit" aria-label="Remove <?=h($ignored['term'])?> from ignore list" title="Remove <?=h($ignored['term'])?>">×</button>
+</form>
+<?php endforeach; ?>
+<?php if(!$ignoredTerms):?><span class="meta">Ignore list is empty.</span><?php endif; ?>
+</div>
+</section>
 
 </main></body></html>
