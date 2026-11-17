@@ -1,5 +1,16 @@
 # Roadmap
 
+## Live headline ticker iteration
+
+- [x] Score current top-ten front-page headlines per source by number of matching top-word occurrences
+- [x] Pick three highest-scoring headlines, with front-page position and scan recency as tie-breakers
+- [x] Display a right-to-left single-line clickable headline marquee below the header
+- [x] Poll lightweight read-only JSON endpoint every 15 seconds, updating only on changes
+- [x] Reuse ignored-word/phrase tokenization for ranking; respect reduced-motion
+- [x] Add ticker regression test
+- [ ] Verify PHP syntax, SQL ranking and scrolling visuals on Colossus
+
+
 ## Top-word headline filter
 
 - [x] Dashboard checkbox optionally keeps only headlines containing a word from the union of its current 1-hour, 24-hour and 7-day top tens
