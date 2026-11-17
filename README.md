@@ -73,28 +73,19 @@ Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux l
 
 After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click **Source Lab** in the dashboard header.
 
-First generate a private key on Colossus:
+Source Lab is **unlocked on your home network**. There is no login, key, or logout button. The Manage Sources section lets you scan a source immediately or permanently delete it (including its saved headlines and scan history); deleted defaults will not reappear.
 
-```bash
-cd ~/headlinescout
-php bin/lab-key.php
-```
+Paste a homepage URL and select **Test extraction methods**. The app downloads the homepage once, checks six extraction strategies, and previews candidate headlines. Choose a method, provide a display name, and save the source. A saved source will be picked up by the next scheduled scan, or use **Scan now** in Source Lab.
 
-Enter the displayed access key in Source Lab. The **Manage Sources** section allows you to permanently remove a source. Deletion requires a confirmation and removes that source's collected headlines, front-page appearances, and scan history. The three initial sources are seeded only on initial database setup, so removed defaults do not reappear.
-
-Then paste a homepage URL and press **Test extraction methods**. The app fetches the homepage **once** (after checking robots.txt) and tries six approaches against that same HTML: heading links, article links, headline-class links, links inside headline blocks, main heading links, and all on-site links (diagnostic only). You can preview up to 35 candidate links per method, choose one (even if it returns zero candidates), name the source, and save it. If the homepage URL is already registered, saving updates its selector and enables it. The collector will scan the new settings on its next due run, or immediately with `php bin/scan.php --all`.
-
-The suggested method is based on crude candidate counts, **not a trustworthy quality ranking**. Inspect the actual preview before saving. HTTP errors, disallowed robots rules, and pages with no matching links are shown as diagnostics. Browser testing does not modify collected headlines or mark source scans successful.
-
-Keep `var/source-lab.key` private (it is gitignored), do not expose the prototype to the public Internet, and do not forward port 8090.
+These controls are deliberately unauthenticated: **any device able to reach port 8090 can change or delete sources.** Keep this service on your trusted LAN and do not expose it to the public Internet. The CSRF form tokens are retained.
 
 ## Current collection behavior
 
 On each scheduled or manual scan, HeadlineScout stores **at most the first 10 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 10 (or fewer) are marked current after a successful scan.
 
-The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. After unlocking Source Lab, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
+The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. In Source Lab, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
 
-Manual scanning is a state-changing authenticated action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
+Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
 ## CNN download-limit adjustment
 
@@ -110,7 +101,7 @@ The original collector had a 3 MB response cap and displayed a confusing cURL wr
 - Scan history and per-scan appearance position
 - Error handling that preserves the previous valid homepage state
 - LAN web dashboard with current/history, source filtering, search, scan health
-- Read-only dashboard plus authenticated Source Lab for test/preview and source editing
+- Read-only dashboard plus Source Lab for test/preview and source editing
 - No AI dependency
 
 ## Known limitations
