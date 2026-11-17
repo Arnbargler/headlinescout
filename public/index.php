@@ -23,7 +23,7 @@ $errors=array_filter($sources,fn($s)=>$s['last_status']==='error');
 <meta http-equiv="refresh" content="300">
 <title>HeadlineScout</title><link rel="stylesheet" href="style.css"></head>
 <body>
-<header><div class="shell top"><div><div class="eyebrow">FRONT PAGE INTELLIGENCE</div><h1>HEADLINE<span>SCOUT</span></h1></div><div class="health"><span class="led"></span> <?=count($sources)?> sources · <?=count($errors)?> errors<br><small>Last success: <?= $lastSuccess?e(gmdate('M j, H:i',$lastSuccess)).' UTC':'Not yet scanned' ?></small></div></div></header>
+<header><div class="shell top"><div><div class="eyebrow">FRONT PAGE INTELLIGENCE</div><h1>HEADLINE<span>SCOUT</span></h1></div><div class="health"><a class="navlink" href="/lab.php">Source Lab →</a><br><span class="led"></span> <?=count($sources)?> sources · <?=count($errors)?> errors<br><small>Last success: <?= $lastSuccess?e(gmdate('M j, H:i',$lastSuccess)).' UTC':'Not yet scanned' ?></small></div></div></header>
 <main class="shell">
 <section class="summary">
 <?php foreach($sources as $source): ?>
