@@ -1,10 +1,19 @@
 # Roadmap
 
+## Current dashboard behavior
+
+- [x] Show only first 10 headline appearances from each source's latest successful scan
+- [x] Group headlines by publication and preserve front-page order
+- [x] Remove history selector from dashboard; reserve history for a separate page later
+- [x] Apply dashboard search only to current top-ten selections
+- [ ] Dedicated history/all-collected-headlines page (later)
+
+
 ## Current iteration — top ten and manual scanning
 
 - [x] Retain only the first ten qualifying homepage links per source in each successful scan; no minimum count
 - [x] Retain up to 120 candidates per Source Lab extraction test for useful method comparisons
-- [x] Add an authenticated Scan now button per source using the same scan lock as cron
+- [x] Add an Scan now button per source using the same scan lock as cron
 - [x] Move source headline-count/status cards from dashboard to Source Lab
 - [ ] Verify PHP syntax and run the updated app on Colossus
 
@@ -16,7 +25,7 @@
 - [x] cURL fetcher, conservative robots checks, bounded redirects and XPath extraction
 - [x] Error handling that preserves the last valid front-page state on transport/parse failures
 - [x] Allow 0–2 headline results without a minimum-count error (zero successful matches clear current status)
-- [x] Read-only PHP LAN dashboard, current/history views, search and source filters
+- [x] Read-only PHP LAN dashboard, top-ten current headlines, search and source filters
 - [x] Install and launch instructions in README
 - [ ] PHP lint and live run of latest Source Lab changes on Colossus
 - [ ] Validate robots rules and actual headlines for CNN, ZeroHedge, Gateway Pundit
@@ -25,7 +34,7 @@
 
 ## v0.2
 
-- [x] Authenticated Source Lab: multi-strategy preview and source saving (awaiting Colossus test)
+- [x] Source Lab: multi-strategy preview and source saving (awaiting Colossus test)
 - [x] List and permanently remove sources in Source Lab (with dependent history cleanup)
 - [ ] Full source manager (edit/disable sources)
 - [ ] Better front-page position/section tracking
