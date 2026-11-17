@@ -120,10 +120,10 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 }
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Source Lab | HeadlineScout</title><link rel="stylesheet" href="style.css"></head><body>
-<header><div class="shell top"><div><div class="eyebrow">HEADLINESCOUT / TOOLS</div><h1>SOURCE <span>LAB</span></h1></div><a class="navlink" href="/">← Dashboard</a></div></header>
+<title>Settings | HeadlineScout</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="shell top"><a href="/" class="brand-link"><h1 class="site-title">Headline<span>Scout</span></h1></a><a class="header-button" href="/">← Dashboard</a></div></header>
 <main class="shell lab">
-<p class="intro">Test a potential news homepage, compare six HTML extraction strategies, inspect candidate headlines, then save a selected method. This tests front-page content only; it does not use RSS or bypass site restrictions.</p>
+<p class="intro"><strong>Settings</strong> — Manage sources, test headline extraction, run scans, and edit ignored words and phrases.</p>
 <?php if($error):?><div class="alert error"><?=h($error)?></div><?php endif;?>
 <?php if($notice):?><div class="alert notice"><?=h($notice)?></div><?php endif;?>
 <section class="panel formpanel"><h2>TEST A HOMEPAGE</h2>
