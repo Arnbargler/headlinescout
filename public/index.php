@@ -14,6 +14,20 @@ $wordStats=[];
 foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
     $wordStats[]=['label'=>$label,'words'=>\HeadlineScout\WordStats::top($db,$hours,$ignored)];
 }
+// Union of the three displayed top-ten word lists; ignore repeated words.
+$trendingWords=[];
+foreach ($wordStats as $period) {
+    foreach ($period['words'] as $word=>$count) $trendingWords[mb_strtolower($word,'UTF-8')]=true;
+}
+$trendingOnly=(($_GET['trending']??'')==='1');
+$matchesTrending=static function (string $title) use ($trendingWords): bool {
+    if (!$trendingWords) return false;
+    preg_match_all("/[\\p{L}\\p{N}]+(?:['’\\-][\\p{L}\\p{N}]+)*/u", mb_strtolower($title,'UTF-8'), $parts);
+    foreach ($parts[0] as $word) {
+        if (isset($trendingWords[$word])) return true;
+    }
+    return false;
+};
 $sections=[];
 $visibleCount=0;
 // For each source, use its most recent SUCCESSFUL scan, not the complete historical
@@ -31,6 +45,9 @@ foreach ($sources as $source) {
     }
     if ($q!=='') {
         $items=array_values(array_filter($items,fn($h)=>mb_stripos($h['title'],$q)!==false));
+    }
+    if ($trendingOnly) {
+        $items=array_values(array_filter($items,fn($h)=>$matchesTrending($h['title'])));
     }
     $visibleCount+=count($items);
     $sections[]=['source'=>$source,'scan'=>$scan,'items'=>$items];
@@ -61,6 +78,7 @@ foreach ($sources as $source) {
 <form method="get" class="filters">
 <label>Source <select name="source"><option value="0">All sources</option><?php foreach($sources as $s): ?><option value="<?=(int)$s['id']?>" <?=$sourceFilter===(int)$s['id']?'selected':''?>><?=e($s['name'])?></option><?php endforeach; ?></select></label>
 <label class="search">Search current headlines <input type="search" name="q" placeholder="Filter displayed headlines" value="<?=e($q)?>"></label>
+<label class="trend-toggle"><input type="checkbox" name="trending" value="1" <?=$trendingOnly?'checked':''?> onchange="this.form.requestSubmit()"> <span>Only headlines with top-count words</span></label>
 <button type="submit">Filter</button></form>
 <?php if(!$sections): ?><div class="empty">No sources configured. Add one in Source Lab.</div><?php endif;?>
 <?php foreach($sections as $section): $s=$section['source']; $scan=$section['scan']; $items=$section['items']; ?>
@@ -70,7 +88,7 @@ foreach ($sources as $source) {
 <span><?= $scan ? 'Last successful scan: '.e(gmdate('M j, H:i',strtotime($scan['finished_at']))).' UTC' : 'Not yet scanned' ?></span>
 </div>
 <?php if(!$items): ?>
-<div class="source-empty"><?= $q!=='' ? 'No matching headlines in this source’s latest top 10.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Source Lab.') ?></div>
+<div class="source-empty"><?= ($q!=='' || $trendingOnly) ? 'No headlines match the selected filters in this source’s latest top 10.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Source Lab.') ?></div>
 <?php else: ?>
 <div class="entries">
 <?php foreach($items as $h): ?>
