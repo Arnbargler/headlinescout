@@ -30,7 +30,7 @@ final class SourceLab {
                 $items=App::extract($body,$final,$method['xpath']);
                 // A balanced candidate range is a starting suggestion, not an accuracy guarantee.
                 $n=count($items);
-                $score=$id==='all' ? -50 : (($n>=3?min($n,70):0) - ($n>85?($n-85):0));
+                $score=$id==='all' ? -50 : (min($n,70) - ($n>85?($n-85):0));
                 $results[$id]=['label'=>$method['label'],'count'=>$n,'score'=>$score,'sample'=>array_slice($items,0,35)];
             } catch (Throwable $e) {
                 $results[$id]=['label'=>$method['label'],'count'=>0,'score'=>-999,'sample'=>[],'error'=>$e->getMessage()];
