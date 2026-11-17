@@ -1,47 +1,32 @@
-# Roadmap and implementation handoff
+# Roadmap
 
-## Current state — documentation only
+## v0.1 — implemented in GitHub, not yet tested on Colossus
 
-Repository initialized with a proposed structure and architecture. No scraper, scheduler, database migration, UI, or AI integration has been implemented or tested.
+- [x] CLI scheduler (`bin/scan.php`) with 15-minute per-source polling and lock
+- [x] SQLite schema, seed sources, scan history and headline appearances
+- [x] cURL fetcher, conservative robots checks, bounded redirects and XPath extraction
+- [x] Error handling that preserves the last valid front-page state
+- [x] Read-only PHP LAN dashboard, current/history views, search and source filters
+- [x] Install and launch instructions in README
+- [ ] PHP lint and live run on Colossus
+- [ ] Validate robots rules and actual headlines for CNN, ZeroHedge, Gateway Pundit
+- [ ] Tune selectors, exclusions and headline accuracy for each site
+- [ ] Install cron after successful manual test
 
-## Milestone 1: prove source extraction
+## v0.2
 
-- [ ] Confirm PHP/extension availability on Colossus.
-- [ ] Inspect robots.txt/terms for CNN, ZeroHedge and The Gateway Pundit.
-- [ ] Implement bounded cURL fetcher and diagnostic CLI.
-- [ ] Inspect real downloaded homepage HTML for all three.
-- [ ] Implement configurable DOM/XPath headline extraction with filtering.
-- [ ] Preview and manually verify headline titles/URLs for each source.
-- [ ] Handle blocked/JS-only sources transparently; no bypass.
-
-## Milestone 2: persistence and scheduling
-
-- [ ] Create versioned SQLite migration.
-- [ ] Seed three initial sources; 900-second defaults.
-- [ ] Implement transactional, idempotent ingest.
-- [ ] Track first/last seen, homepage visibility, section and position.
-- [ ] Implement scan log and error states.
-- [ ] Add cron-based due-source scheduler and overlap lock.
-
-## Milestone 3: browser dashboard
-
-- [ ] Read-only headline listing, grouped/filterable by source.
-- [ ] Clearly show new/current vs historical links and scan status.
-- [ ] Add source test/preview and editable extraction settings.
-- [ ] Escape untrusted content and protect admin endpoints.
+- [ ] Source-test preview and configuration editor (authenticated)
+- [ ] Better front-page position/section tracking
+- [ ] Improve robots.txt implementation and add fixture tests
+- [ ] Add source-specific scan health diagnostics
+- [ ] Build systemd + production PHP web-server deployment guide
+- [ ] Add read/unread and bookmarks
 
 ## Later
 
-- Read/unread, bookmarks, keyword filters, search.
-- Headline revisions, prominence analytics, daily briefings.
-- Optional on-demand article retrieval and local AI summaries.
-- AI analysis modes: context, skeptic, comparison, scenarios/speculation; explicitly mark uncertain content.
-- Production deployment guide: host cron (perhaps every 30 minutes), SSL, auth, backup and migration.
+- [ ] On-demand article body fetch when allowed
+- [ ] Optional Colossus llama.cpp summaries, comparisons, critical analysis and clearly marked speculation
+- [ ] Headlines over time, topic grouping and daily briefs
+- [ ] Public hosting with authentication, HTTPS and backups
 
-## Coding-session starting point
-
-Begin with a CLI HTTP diagnostic for **one site at a time**; verify actual results on Colossus before designing selectors. No need to install or configure a complex framework. Ensure the collector cannot accidentally treat failed scans as authoritative empty homepages.
-
-## Definition of v0.1 done
-
-A local browser shows actual front-page headline links collected from supported target sites; SQLite retains history; scheduled scans run every 15 minutes; failures are visible; no AI process is required for collection.
+**Next action:** Pull the repository to Colossus and run the instructions in README. The scraper has not yet been validated from the target machine.
