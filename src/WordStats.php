@@ -60,24 +60,9 @@ final class WordStats {
         $cutoff=gmdate('c',time()-$hours*3600);
         $stmt=$db->prepare('SELECT title FROM headlines WHERE first_seen_at >= ?');
         $stmt->execute([$cutoff]);
-        $terms=array_column($ignored,'term');
-        // Remove longer ignored phrases first so overlapping terms behave predictably.
-        usort($terms,fn($a,$b)=>mb_strlen($b,'UTF-8')<=>mb_strlen($a,'UTF-8'));
-        $phrasePatterns=[];
-        $stop=[];
-        foreach ($terms as $term) {
-            if (str_contains($term,' ') || str_contains($term,'-')) {
-                $parts=preg_split('/[\s\-]+/u',$term);
-                $phrasePatterns[]='/(?<![\p{L}\p{N}])'.implode('[\s\-]+',array_map(fn($x)=>preg_quote($x,'/'),$parts)).'(?![\p{L}\p{N}])/iu';
-            } else $stop[$term]=true;
-        }
         $counts=[];
         while ($row=$stmt->fetch()) {
-            $title=mb_strtolower($row['title'],'UTF-8');
-            foreach ($phrasePatterns as $pattern) $title=preg_replace($pattern,' ',$title);
-            preg_match_all('/[\p{L}\p{N}]+(?:[\'’\-][\p{L}\p{N}]+)*/u',$title,$matches);
-            foreach ($matches[0] as $word) {
-                if (isset($stop[$word]) || mb_strlen($word,'UTF-8')<2) continue;
+            foreach (self::tokens($row['title'], $ignored) as $word) {
                 $counts[$word]=($counts[$word]??0)+1;
             }
         }
@@ -85,4 +70,26 @@ final class WordStats {
         arsort($counts,SORT_NUMERIC); // stable tie ordering (alphabetical pre-sort)
         return array_slice($counts,0,$limit,true);
     }
+
+    /** Tokenization shared by frequency analysis and ticker ranking. */
+    public static function tokens(string $title, array $ignored): array {
+        $terms=array_map(static fn($entry)=>(string)$entry['term'],$ignored);
+        usort($terms,fn($a,$b)=>mb_strlen($b,'UTF-8')<=>mb_strlen($a,'UTF-8'));
+        $title=mb_strtolower($title,'UTF-8');
+        $stop=[];
+        foreach ($terms as $term) {
+            if (str_contains($term,' ') || str_contains($term,'-')) {
+                $parts=preg_split('/[\s\-]+/u',$term);
+                $pattern='/(?<![\p{L}\p{N}])'.implode('[\s\-]+',array_map(fn($x)=>preg_quote($x,'/'),$parts)).'(?![\p{L}\p{N}])/iu';
+                $title=preg_replace($pattern,' ',$title);
+            } else {
+                $stop[$term]=true;
+            }
+        }
+        preg_match_all('/[\p{L}\p{N}]+(?:[\'’\-][\p{L}\p{N}]+)*/u',$title,$matches);
+        return array_values(array_filter($matches[0],static fn($word)=>
+            !isset($stop[$word]) && mb_strlen($word,'UTF-8')>=2
+        ));
+    }
+
 }
