@@ -87,14 +87,14 @@ SQL);
         return $origin . '/' . implode('/', $stack);
     }
 
-    private static function fetch(string $url): array {
+    public static function fetch(string $url): array {
         for ($hop=0; $hop<4; $hop++) {
             if (!self::publicUrl($url)) throw new RuntimeException('Blocked unsafe/unresolvable destination: ' . $url);
             $headers = [];
             $body = '';
             $ch = curl_init($url);
             curl_setopt_array($ch, [
-                CURLOPT_FOLLOWLOCATION => false, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 20,
+                CURLOPT_FOLLOWLOCATION => false, CURLOPT_CONNECTTIMEOUT => 8, CURLOPT_TIMEOUT => 25, CURLOPT_ENCODING => '',
                 CURLOPT_USERAGENT => 'HeadlineScout/0.1 (+self-hosted personal front-page monitor)',
                 CURLOPT_HTTPHEADER => ['Accept: text/html,application/xhtml+xml', 'Accept-Language: en-US,en;q=0.8'],
                 CURLOPT_HEADERFUNCTION => function($ch,$line) use (&$headers) {
@@ -103,7 +103,7 @@ SQL);
                     return strlen($line);
                 },
                 CURLOPT_WRITEFUNCTION => function($ch,$part) use (&$body) {
-                    if (strlen($body) + strlen($part) > 3_000_000) return 0;
+                    if (strlen($body) + strlen($part) > 12_000_000) return 0;
                     $body .= $part; return strlen($part);
                 }
             ]);
@@ -111,7 +111,7 @@ SQL);
             $status = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
             $error = curl_error($ch);
             curl_close($ch);
-            if ($ok === false) throw new RuntimeException('HTTP fetch failed: ' . $error);
+            if ($ok === false) throw new RuntimeException(str_contains($error, 'Failure writing output') ? 'Homepage exceeded 12 MB download limit (or response write failed)' : 'HTTP fetch failed: ' . $error);
             if ($status >= 300 && $status < 400 && isset($headers['location'])) {
                 $url = self::absolute($url, $headers['location']); continue;
             }
@@ -120,7 +120,7 @@ SQL);
         throw new RuntimeException('Too many redirects');
     }
 
-    private static function robotsAllowed(string $url): bool {
+    public static function robotsAllowed(string $url): bool {
         $p = parse_url($url);
         $robotsUrl = ($p['scheme'] ?? 'https') . '://' . $p['host'] . '/robots.txt';
         try {
