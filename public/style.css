@@ -17,3 +17,13 @@
 .preview{padding-left:22px;max-height:330px;overflow:auto}.preview li{padding:4px 0;overflow-wrap:anywhere}
 .preview a{color:var(--text);text-decoration:none}.preview a:hover{color:var(--accent)}
 @media(max-width:700px){.methods{grid-template-columns:1fr}}
+
+/* Source management */
+.managed-sources{display:flex;flex-direction:column}
+.managed-source{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
+.managed-source-info{min-width:0;overflow-wrap:anywhere}
+.managed-source .meta{margin-top:3px}
+.managed-source form{flex-shrink:0}
+button.danger{background:#542635;border:1px solid #9f425b;color:#ffe4eb}
+button.danger:hover{background:#7a2e44}
+@media(max-width:520px){.managed-source{align-items:flex-start;flex-direction:column}}
