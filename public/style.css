@@ -73,3 +73,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 /* Word-count headline filter: normal checkbox, no access gate */
 .filters .trend-toggle{flex-direction:row;align-items:center;gap:9px;cursor:pointer;color:var(--text);font-size:13px;align-self:end;padding:8px 0}
 .filters .trend-toggle input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent);margin:0;flex:0 0 auto;cursor:pointer}
+
+/* Minimal site navigation */
+.top{padding-top:16px;padding-bottom:16px}
+.site-title{margin:0;font-size:27px;letter-spacing:.01em;text-transform:none}
+.brand-link{text-decoration:none;color:inherit}
+.header-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 14px;border:1px solid #3a4a60;border-radius:7px;background:#17283b;color:var(--text);font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap}
+.header-button:hover{background:#203b51;border-color:var(--accent);color:var(--accent)}
+.header-button svg{flex-shrink:0}
+@media(max-width:600px){.site-title{font-size:23px}.header-button{padding:8px 11px}}
