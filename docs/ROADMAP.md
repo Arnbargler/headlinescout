@@ -1,5 +1,14 @@
 # Roadmap
 
+## Top-word headline filter
+
+- [x] Dashboard checkbox optionally keeps only headlines containing a word from the union of its current 1-hour, 24-hour and 7-day top tens
+- [x] Case-insensitive whole-token matching; combine with source and text filters
+- [x] Default unchecked; selection persists through form submissions
+- [x] Filtering changes presentation only, never stored scan data
+- [ ] Verify on Colossus after pulling
+
+
 ## Word-frequency iteration
 
 - [x] Dashboard: top 10 mentioned headline words across 1 hour, 24 hours, and 7 days
