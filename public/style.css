@@ -82,3 +82,19 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .header-button:hover{background:#203b51;border-color:var(--accent);color:var(--accent)}
 .header-button svg{flex-shrink:0}
 @media(max-width:600px){.site-title{font-size:23px}.header-button{padding:8px 11px}}
+
+/* Live top-three headline ticker */
+.ticker-bar{border-bottom:1px solid var(--line);background:#0b1725}
+.ticker-shell{display:flex;align-items:center;gap:16px;min-height:42px}
+.ticker-caption{flex:0 0 auto;color:var(--accent);font-size:11px;letter-spacing:.12em;font-weight:800;white-space:nowrap}
+.ticker-viewport{overflow:hidden;flex:1;min-width:0;white-space:nowrap;mask-image:linear-gradient(to right,transparent,#000 2%,#000 98%,transparent)}
+.ticker-track{display:flex;align-items:center;gap:56px;min-height:42px;width:max-content}
+.ticker-scroll{padding-left:100%;animation:ticker-move 48s linear infinite}
+.ticker-viewport:hover .ticker-scroll,.ticker-viewport:focus-within .ticker-scroll{animation-play-state:paused}
+.ticker-story{flex:none;color:var(--text);font-size:13px;text-decoration:none}
+.ticker-story strong{color:var(--accent)}
+.ticker-story:hover{text-decoration:underline;color:var(--accent)}
+.ticker-empty{color:var(--muted);font-size:13px}
+@keyframes ticker-move{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+@media(max-width:600px){.ticker-shell{gap:9px}.ticker-caption{font-size:10px}.ticker-story{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.ticker-scroll{animation:none;padding-left:0}.ticker-viewport{overflow-x:auto;mask-image:none}.ticker-track{width:max-content}}
