@@ -68,24 +68,46 @@ Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux l
 
 **Do not install cron until the first manual scan has been examined.** The first three sources are intentionally unverified. Once deployed externally, use a provider cron facility and consider 1800-second source intervals.
 
+
+## Source Lab: test and add news sites (new)
+
+After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click **Source Lab** in the dashboard header.
+
+First generate a private key on Colossus:
+
+```bash
+cd ~/headlinescout
+php bin/lab-key.php
+```
+
+Enter the displayed access key in Source Lab. Then paste a homepage URL and press **Test extraction methods**. The app fetches the homepage **once** (after checking robots.txt) and tries six approaches against that same HTML: heading links, article links, headline-class links, links inside headline blocks, main heading links, and all on-site links (diagnostic only). You can preview up to 35 candidate links per method, choose one, name the source, and save it. If the homepage URL is already registered, saving updates its selector and enables it. The collector will scan the new settings on its next due run, or immediately with `php bin/scan.php --all`.
+
+The suggested method is based on crude candidate counts, **not a trustworthy quality ranking**. Inspect the actual preview before saving. HTTP errors, disallowed robots rules, and pages with no matching links are shown as diagnostics. Browser testing does not modify collected headlines or mark source scans successful.
+
+Keep `var/source-lab.key` private (it is gitignored), do not expose the prototype to the public Internet, and do not forward port 8090.
+
+## CNN download-limit adjustment
+
+The original collector had a 3 MB response cap and displayed a confusing cURL write-callback error when CNN exceeded it. The cap is now 12 MB, and any further size failure is explained explicitly. This **does not prove** CNN can be fetched or parsed; re-run the scan on Colossus to verify.
+
 ## What works in v0.1
 
 - Automatic SQLite creation and initial source seeding
-- cURL homepage fetching with explicit limits, timeouts, and bounded redirects
+- cURL homepage fetching with an explicit 12 MB cap, timeouts, and bounded redirects
 - Conservative robots.txt check; fail closed when robots status cannot be established
 - DOM/XPath heading-link extraction, local-domain filtering, basic exclusions
 - Stored headline first/last seen timestamps and \`is_current\` state
 - Scan history and per-scan appearance position
 - Error handling that preserves the previous valid homepage state
 - LAN web dashboard with current/history, source filtering, search, scan health
-- Read-only web interface: no public scan trigger or unauthenticated source editing
+- Read-only dashboard plus authenticated Source Lab for test/preview and source editing
 - No AI dependency
 
 ## Known limitations
 
 - Source-specific selectors have **not yet been validated against Colossus's actual fetched pages**. Some or all three sources may currently return errors; their markup or policies can change. The generic selector may collect unwanted links.
 - A source requires at least 3 valid headline candidates to count as a successful scan; this is a temporary safety threshold.
-- No automated testing, browser-based source editor, read/unread, article extraction or AI analysis yet.
+- No automated test suite, full source management UI, read/unread, article extraction or AI analysis yet.
 - Robots policy implementation covers straightforward allow/disallow patterns but is not yet a full RFC 9309 implementation. Review against each site's actual policies before unattended polling.
 - Basic SSRF validation is included, but this prototype is not a hardened public multi-user crawler.
 
