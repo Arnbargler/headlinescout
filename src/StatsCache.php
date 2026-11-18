@@ -8,7 +8,7 @@ use RuntimeException;
 /**
  * File-backed, per-period Word Count cache shared by Dashboard, Articles and ticker.
  * Each window expires independently. Cached top words and trend rows come from the
- * same calculation; changing the ignored terms invalidates the cache key.
+ * same calculation; ignore-list edits and new successful scans invalidate snapshots.
  */
 final class StatsCache {
     public const TTL = [
@@ -27,6 +27,7 @@ final class StatsCache {
         }
         $span=$periods[$key]['seconds'];
         $ttl=self::TTL[$key];
+        $revision=(int)$db->query("SELECT COALESCE(MAX(id),0) FROM scans WHERE status='success'")->fetchColumn();
 
         // Tests and embedded callers commonly use sqlite::memory:. Never let
         // their synthetic data overwrite/read the production on-disk cache.
@@ -35,7 +36,7 @@ final class StatsCache {
             $databases=$db->query('PRAGMA database_list')->fetchAll(PDO::FETCH_ASSOC);
             $main=array_values(array_filter($databases,static fn(array $entry): bool => $entry['name']==='main'));
             if (!$main || ($main[0]['file']??'')==='') {
-                return self::calculate($db,$span,$ignored,$ttl,'memory');
+                return self::calculate($db,$span,$ignored,$ttl,'memory',$revision);
             }
         }
         $hash=hash('sha256','headline-clean-v2:'.json_encode(array_column($ignored,'term'),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
@@ -43,12 +44,13 @@ final class StatsCache {
         $file=$directory.'/word-'.$key.'.json';
         $now=time();
 
-        $read=static function() use ($file,$hash): ?array {
+        $read=static function() use ($file,$hash,$revision): ?array {
             if (!is_file($file)) return null;
             $json=@file_get_contents($file);
             if ($json===false) return null;
             $data=json_decode($json,true);
             if (!is_array($data) || ($data['ignore_hash']??null)!==$hash ||
+                ($data['scan_revision']??null)!==$revision ||
                 !isset($data['expires_at'],$data['rows'],$data['top']) ||
                 !is_array($data['rows']) || !is_array($data['top'])) return null;
             return $data;
@@ -60,22 +62,22 @@ final class StatsCache {
         // On a busy host only the first request should do the expensive work.
         // Others may use slightly stale data while the cache is refreshed.
         if (!is_dir($directory) && !@mkdir($directory,0770,true) && !is_dir($directory)) {
-            return self::calculate($db,$span,$ignored,$ttl,$hash);
+            return self::calculate($db,$span,$ignored,$ttl,$hash,$revision);
         }
         $lock=@fopen($directory.'/word-'.$key.'.lock','c');
-        if (!$lock) return self::calculate($db,$span,$ignored,$ttl,$hash);
+        if (!$lock) return self::calculate($db,$span,$ignored,$ttl,$hash,$revision);
         if (!flock($lock,LOCK_EX|LOCK_NB)) {
             if ($cached) { fclose($lock); return $cached; }
             // Initial cold-cache request waits rather than duplicating a costly query.
             if (!flock($lock,LOCK_EX)) {
                 fclose($lock);
-                return self::calculate($db,$span,$ignored,$ttl,$hash);
+                return self::calculate($db,$span,$ignored,$ttl,$hash,$revision);
             }
         }
         try {
             $cached=$read();
             if ($cached && $cached['expires_at']>time()) return $cached;
-            $fresh=self::calculate($db,$span,$ignored,$ttl,$hash);
+            $fresh=self::calculate($db,$span,$ignored,$ttl,$hash,$revision);
             $temp=@tempnam($directory,'.word-'.$key.'-');
             if ($temp!==false) {
                 try {
@@ -92,11 +94,12 @@ final class StatsCache {
         }
     }
 
-    private static function calculate(PDO $db,int $span,array $ignored,int $ttl,string $hash): array {
+    private static function calculate(PDO $db,int $span,array $ignored,int $ttl,string $hash,int $revision): array {
         $calculated=time();
         $snapshot=WordStats::snapshot($db,$span,$ignored,$calculated);
         return [
             'ignore_hash'=>$hash,
+            'scan_revision'=>$revision,
             'calculated_at'=>$calculated,
             'expires_at'=>$calculated+$ttl,
             'top'=>$snapshot['top'],
