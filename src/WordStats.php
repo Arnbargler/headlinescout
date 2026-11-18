@@ -96,11 +96,9 @@ SQL);
     }
 
     /**
-     * Compare the current top 10 to the top 10 from the immediately prior,
-     * equally sized interval. "new" means absent from the previous TOP TEN,
-     * not necessarily absent from all previous headlines.
+     * Compare the current top ten against the previous equal-length window.
+     * NEW means absent from the previous window's top ten, not all history.
      */
-    /** Each column compares a rolling window with the immediately previous equal window. */
     public static function trendingSeconds(PDO $db, int $span, array $ignored, int $limit=10): array {
         $now=time();
         $current=array_slice(self::counts($db,$ignored,$now-$span,$now),0,$limit,true);
