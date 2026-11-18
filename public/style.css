@@ -54,6 +54,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .word-stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
 .word-period{padding:16px 20px;min-width:0}
 .word-period+.word-period{border-left:1px solid var(--line)}
+.word-period:nth-child(3n+1){border-left:0}
+.word-period:nth-child(n+4){border-top:1px solid var(--line)}
+
 .word-period h3{margin:0 0 12px;color:var(--accent);font-size:15px}
 .word-ranking{list-style:none;counter-reset:wordrank;padding:0;margin:0}
 .word-ranking li{counter-increment:wordrank;display:flex;gap:8px;align-items:baseline;padding:5px 0;border-bottom:1px solid #233045}
@@ -68,7 +71,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .ignore-tag{display:flex;align-items:center;gap:7px;border-radius:5px;border:1px solid var(--line);background:#101a28;padding:4px 5px 4px 10px;font-size:13px}
 .ignore-tag button{font-size:18px;line-height:1;background:transparent;border:0;color:var(--muted);padding:2px 5px}
 .ignore-tag button:hover{color:#fb7185}
-@media(max-width:750px){.word-stats-grid{grid-template-columns:1fr}.word-period+.word-period{border-left:0;border-top:1px solid var(--line)}}
+@media(max-width:750px){.word-stats-grid{grid-template-columns:1fr}.word-period+.word-period{border-left:0;border-top:1px solid var(--line)}.word-period:nth-child(n+4){border-top:1px solid var(--line)}}
 
 /* Word-count headline filter: normal checkbox, no access gate */
 .filters .trend-toggle{flex-direction:row;align-items:center;gap:9px;cursor:pointer;color:var(--text);font-size:13px;align-self:end;padding:8px 0}
