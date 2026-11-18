@@ -2,7 +2,17 @@
 
 **A self-hosted front-page headline monitor.** PHP + SQLite, intended to run as a LAN web application on **Colossus** and later on a PHP web host.
 
-**Status: v0.1 first implementation committed; not yet tested on Colossus.** No guarantees that the initial sites will allow automated retrieval or match the generic extraction selector. The dashboard is a read-only web app; scanning runs separately.
+**Status: working LAN installation on Colossus.** Automated collection uses cron; source management and manual scanning are available in Settings. Some sources can still reject scraping or require custom selectors.
+
+## Three-tab interface
+
+The shared header displays the **HeadlineScout** brand, a diversity-aware **Top Headlines** scrolling ticker, and three tabs. Its layout and live ticker are rendered from one shared PHP component (`public/_chrome.php`) so all pages stay consistent. Navigation loads the selected page normally, and the ticker fetches new rankings every 15 seconds while visible.
+
+- **Dashboard** (`/`, `public/index.php`): Word Count trend lists, proportional bars and room for more analysis later. No article feed.
+- **Articles** (`/articles.php`): Current Front Pages grouped by source, five current headlines per source, source selector, headline search, and top-word-only checkbox.
+- **Settings** (`/settings.php`): Source setup, extraction tests, scan-now actions and word/phrase ignore list. Existing `/lab.php` bookmarks continue to work, pointing to the same Settings functionality.
+
+The browser navigation tabs share the branding and the ticker; they do not require a JavaScript single-page app or change the scanner/database.
 
 ## Initial sources
 
@@ -71,7 +81,7 @@ Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux l
 
 ## Settings: test and add news sites
 
-After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click the **⚙ Settings** button in the dashboard header.
+After pulling the latest code and starting the LAN web server, open **http://colossus.local:8090/lab.php** or click the **Settings** tab in the shared navigation.
 
 Source Lab is **unlocked on your home network**. There is no login, key, or logout button. The Manage Sources section lets you scan a source immediately or permanently delete it (including its saved headlines and scan history); deleted defaults will not reappear.
 
