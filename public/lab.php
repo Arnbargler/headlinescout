@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Settings | HeadlineScout</title><link rel="stylesheet" href="style.css"></head><body>
-<header><div class="shell top"><a href="/" class="brand-link"><h1 class="site-title">Headline<span>Scout</span></h1></a><a class="header-button" href="/">← Dashboard</a></div></header>
+<?php $activeTab='settings'; require __DIR__.'/_chrome.php'; ?>
 <main class="shell lab">
 <p class="intro"><strong>Settings</strong> — Manage sources, test headline extraction, run scans, and edit ignored words and phrases.</p>
 <?php if($error):?><div class="alert error"><?=h($error)?></div><?php endif;?>
@@ -215,4 +215,4 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_
 </div>
 </section>
 
-</main></body></html>
+</main><script src="/ticker.js" defer></script></body></html>
