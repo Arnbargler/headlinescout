@@ -10,12 +10,12 @@ $esc=static fn(mixed $v): string=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUB
   <div class="shell ticker-shell">
     <span class="ticker-caption">TOP HEADLINES</span>
     <div class="ticker-viewport">
-      <div id="headline-ticker-track" class="ticker-track <?=$tickerItems?'ticker-scroll':''?>" data-signature="<?=$esc(json_encode($tickerItems, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES))?>">
-        <?php if(!$tickerItems): ?><span class="ticker-empty">No trending headlines yet — scan a source to begin.</span><?php else: ?>
-        <?php foreach($tickerItems as $headline): ?>
-        <a class="ticker-story" href="<?=$esc($headline['url'])?>" target="_blank" rel="noopener noreferrer"><strong><?=$esc($headline['source'])?> · </strong><?=$esc($headline['title'])?></a>
-        <?php endforeach; ?>
-        <?php endif; ?>
+      <div id="headline-ticker-track" class="ticker-track" data-signature="<?=$esc(json_encode($tickerItems, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES))?>">
+        <?php if (!$tickerItems): ?>
+        <span class="ticker-empty">No trending headlines yet — scan a source to begin.</span>
+        <?php else: foreach($tickerItems as $headline): ?>
+        <a class="ticker-story" href="<?=$esc($headline['url'])?>" target="_blank" rel="noopener noreferrer"><?=$esc($headline['title'])?></a>
+        <?php endforeach; endif; ?>
       </div>
     </div>
   </div>
