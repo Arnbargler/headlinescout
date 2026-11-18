@@ -6,15 +6,15 @@ use PDO;
 
 /**
  * The ticker is based on currently displayed front-page headlines, independent of
- * dashboard search/source filters. It is calculated on request from SQLite so
- * automatic/Source Lab scans are reflected on the next lightweight refresh.
+ * dashboard search/source filters. Shared cached Word Count results avoid
+ * re-tokenizing historical headlines at every 15-second ticker refresh.
  */
 final class Ticker {
     public static function items(PDO $db): array {
         $ignored=WordStats::ignored($db);
         $trending=[];
-        foreach ([1,24,168] as $hours) {
-            foreach (WordStats::top($db,$hours,$ignored) as $word=>$mentions) {
+        foreach (['hour','day','week'] as $period) {
+            foreach (StatsCache::period($db,$period,$ignored)['top'] as $word=>$mentions) {
                 $trending[mb_strtolower((string)$word,'UTF-8')]=true;
             }
         }
