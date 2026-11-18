@@ -8,14 +8,16 @@ $activeTab='articles';
 $sourceFilter=filter_input(INPUT_GET,'source',FILTER_VALIDATE_INT) ?: 0;
 $q=trim((string)($_GET['q']??''));
 $sources=$db->query('SELECT id,name,last_success_at,last_status FROM sources WHERE enabled=1 ORDER BY id')->fetchAll();
-$ignored=\HeadlineScout\WordStats::ignored($db);
+$trendingOnly=(($_GET['trending']??'')==='1');
 $trendingWords=[];
-foreach ([1,24,168] as $hours) {
-    foreach (\HeadlineScout\WordStats::top($db,$hours,$ignored) as $word=>$count) {
-        $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
+if ($trendingOnly) {
+    $ignored=\HeadlineScout\WordStats::ignored($db);
+    foreach ([1,24,168] as $hours) {
+        foreach (\HeadlineScout\WordStats::top($db,$hours,$ignored) as $word=>$count) {
+            $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
+        }
     }
 }
-$trendingOnly=(($_GET['trending']??'')==='1');
 $matchesTrending=static function(string $title) use($trendingWords): bool {
     if (!$trendingWords) return false;
     preg_match_all("/[\\p{L}\\p{N}]+(?:['’\\-][\\p{L}\\p{N}]+)*/u",mb_strtolower($title,'UTF-8'),$parts);
