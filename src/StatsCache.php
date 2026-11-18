@@ -4,7 +4,6 @@ namespace HeadlineScout;
 
 use PDO;
 use RuntimeException;
-use Throwable;
 
 /**
  * File-backed, per-period Word Count cache shared by Dashboard, Articles and ticker.
