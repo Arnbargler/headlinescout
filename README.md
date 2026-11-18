@@ -79,6 +79,12 @@ Paste a homepage URL and select **Test extraction methods**. The app downloads t
 
 These controls are deliberately unauthenticated: **any device able to reach port 8090 can change or delete sources.** Keep this service on your trusted LAN and do not expose it to the public Internet. The CSRF form tokens are retained.
 
+## Headline sentence cleanup
+
+HeadlineScout keeps only the **first sentence** of each extracted homepage title before it reaches SQLite. This also affects Source Lab extraction previews. Sentences are detected at a period, question mark or exclamation mark followed by a likely new sentence; common abbreviations (e.g. `Dr.`, `U.S.`) and decimal points are protected. The original article URL stays unchanged, and existing stored titles are not rewritten retroactively. Re-scanning a still-present article will update its saved title.
+
+Check the parser after pulling: `php tests/extraction-limit.php`.
+
 ## Current collection behavior
 
 On each scheduled or manual scan, HeadlineScout stores **at most the first 5 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 5 (or fewer) are marked current after a successful scan.
