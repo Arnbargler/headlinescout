@@ -1,5 +1,5 @@
 (() => {
-    const periods = [...document.querySelectorAll('.word-period[data-hours]')];
+    const periods = [...document.querySelectorAll('.word-period[data-period]')];
     if (!periods.length) return;
     const symbols = {up:'↑', down:'↓', flat:'→', new:'NEW'};
     const descriptions = {up:'Trending up', down:'Trending down', flat:'No change', new:'New to top ten'};
@@ -84,7 +84,7 @@
             const payload = await response.json();
             if (!Array.isArray(payload.periods)) return;
             for (const result of payload.periods) {
-                const period = periods.find(p => Number(p.dataset.hours) === result.hours);
+                const period = periods.find(p => p.dataset.period === result.key);
                 if (period && Array.isArray(result.rows)) renderPeriod(period,result.rows);
             }
         } catch (_) {
