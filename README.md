@@ -81,9 +81,9 @@ These controls are deliberately unauthenticated: **any device able to reach port
 
 ## Current collection behavior
 
-On each scheduled or manual scan, HeadlineScout stores **at most the first 5 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 10 (or fewer) are marked current after a successful scan.
+On each scheduled or manual scan, HeadlineScout stores **at most the first 5 qualifying headline links** for that source, in the order supplied by the chosen extraction strategy. Source Lab's multi-method test still shows the broader candidate set so methods can be compared. Earlier collected headlines remain in history but only the current top 5 (or fewer) are marked current after a successful scan.
 
-The dashboard displays **only the latest successful scan's first 5 headlines per source**, in page order. It has no history/all-headlines option; earlier records remain in SQLite for a dedicated future History page. The optional search filters these ten per source rather than searching old records. The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. In Settings, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
+The dashboard displays **only the latest successful scan's first 5 headlines per source**, in page order. It has no history/all-headlines option; earlier records remain in SQLite for a dedicated future History page. The optional search filters these five per source rather than searching old records. The dashboard is now a feed-only view. The per-source status cards and current headline counts live under **Source Lab → Manage Sources**. In Settings, click **Scan now** alongside any source to immediately refresh that source. The button uses the same nonblocking lock as the CLI collector, so it declines the request if another collector scan is underway. The status message reports how many headlines were retained and how many were newly inserted. A browser scan also updates the source's last scan timestamp, resetting its regular 15-minute due interval.
 
 Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
@@ -118,7 +118,7 @@ php tests/ticker.php
 
 ## Why the 1-hour word list can become empty
 
-**Page reloads and ticker polls do not scrape websites.** Only the CLI cron collector or a manual Settings → Scan now can update headlines. The dashboard now warns if its most recent successful source scan is older than one hour and the hourly word list is empty.
+**Page reloads and ticker polls do not scrape websites.** Only the CLI cron collector or a manual Settings → Scan now can update headlines. The dashboard warns if its most recent successful source scan is older than one hour and the hourly word list is empty.
 
 Check that scheduled scans are actually configured and running on Colossus:
 
@@ -157,7 +157,7 @@ php tests/ticker.php
 
 ## Word count dashboard
 
-The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows based on scan-appearance history, not just mutable last-seen timestamps. A headline contributes its title only once per time window, even if the same link appears in multiple scans. A headline first discovered yesterday can still contribute to the 1-hour counts **when it appeared in a successful scan during the last hour**. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current five per source**, and are independent of the dashboard source/search filters.
+The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows based on scan-appearance history, not just mutable last-seen timestamps. A headline contributes its title only once per time window, even if the same link appears in multiple scans. A headline first discovered yesterday can still contribute to the 1-hour counts **when it appeared in a successful scan during the last hour**. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use unique headlines seen among the first five positions of successful scans during each time window, **not only the current five per source**, and are independent of the dashboard source/search filters.
 
 The default ignored-word list includes ordinary English stop words such as `the`, `a`, `for`, `with`, etc. In **Settings → Word Count — Ignore List**, you can add either a word or phrase and remove existing entries. Matching is case-insensitive. Ignored phrases are removed as whole sequences before remaining words are counted, e.g., ignoring `breaking news` removes both words only when adjacent as that phrase. The defaults are seeded only once; removing one does not cause it to reappear. Edits take effect on the next dashboard load without changing any saved headlines.
 
