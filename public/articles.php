@@ -12,8 +12,8 @@ $trendingOnly=(($_GET['trending']??'')==='1');
 $trendingWords=[];
 if ($trendingOnly) {
     $ignored=\HeadlineScout\WordStats::ignored($db);
-    foreach ([1,24,168] as $hours) {
-        foreach (\HeadlineScout\WordStats::top($db,$hours,$ignored) as $word=>$count) {
+    foreach (['hour','day','week'] as $period) {
+        foreach (\HeadlineScout\StatsCache::period($db,$period,$ignored)['top'] as $word=>$count) {
             $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
         }
     }
