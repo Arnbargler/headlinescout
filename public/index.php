@@ -27,7 +27,7 @@ foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
 <div class="word-period"><h3><?=e($period['label'])?></h3>
 <?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
 <ol class="word-ranking"><?php foreach($period['rows'] as $entry): ?>
-<li>
+<li class="word-trend-<?=e($entry['direction'])?>">
   <span class="word-label"><?=e($entry['word'])?></span>
   <span class="word-bar" aria-hidden="true"><span class="word-bar-fill" style="width:<?=e($entry['percent'])?>%"></span></span>
   <strong class="word-total"><?=(int)$entry['count']?></strong>
