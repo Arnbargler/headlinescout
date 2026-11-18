@@ -54,3 +54,9 @@ The collector records five appearances per successful scan (previous older scans
 ## Shared page chrome (implemented)
 
 `public/_chrome.php` renders the HeadlineScout logo, live top-three ticker and Dashboard / Articles / Settings tab navigation for all three pages. Each page initializes its own database connection and sets `$activeTab` before including this component. `public/ticker.js` runs on every tab, polling `/ticker.php` every 15 seconds. `public/articles.php` owns current-page feed filters. `public/index.php` owns Word Count analytics. `public/settings.php` currently includes `public/lab.php`, preserving both URLs and settings POST handling without duplicating functionality. Tabs are ordinary links, not a SPA; shared chrome is visually consistent across page loads.
+
+## Scheduler fairness and expanded word-trend periods
+
+`src/Scheduler.php` ranks due sources by their computed due timestamp (`last_scan_at + interval_seconds`), prioritizing never-scanned entries. `bin/scan.php` requests up to three due entries on each cron run; `--all` bypasses eligibility and limits.
+
+`WordStats::periods()` defines the six configured analysis windows in seconds (900, 3600, 86400, 604800, 2592000, 31536000), shared by the initial server-rendered Dashboard and `/word-stats.php`. `trendingSeconds()` compares two adjacent equal-length rolling windows using distinct per-scan headline appearances. The live JS matches panels by stable period key, keeping its existing rank/count flash behavior.
