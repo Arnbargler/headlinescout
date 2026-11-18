@@ -87,6 +87,26 @@ The dashboard displays **only the latest successful scan's first 10 headlines pe
 
 Manual scanning is a state-changing action guarded by the same CSRF token as other Source Lab forms. Frequent manual scans still generate requests to external websites: use responsibly.
 
+## Why the 1-hour word list can become empty
+
+**Page reloads and ticker polls do not scrape websites.** Only the CLI cron collector or a manual Settings → Scan now can update headlines. The dashboard now warns if its most recent successful source scan is older than one hour and the hourly word list is empty.
+
+Check that scheduled scans are actually configured and running on Colossus:
+
+```bash
+crontab -l
+systemctl is-active cron
+tail -n 25 ~/headlinescout/var/cron.log
+```
+
+If the personal crontab is empty, run `crontab -e` and add this entry for the known Colossus login (`arn`):
+
+```cron
+* * * * * /usr/bin/php /home/arn/headlinescout/bin/scan.php >> /home/arn/headlinescout/var/cron.log 2>&1
+```
+
+The one-minute cron tick only scans a source when its own configured 15-minute interval has elapsed. To immediately refresh all enabled sources, run `php bin/scan.php --all`. A successful scan updates each headline's `last_seen_at`; the word counts then include each distinct headline once per time window.
+
 ## Top three headline ticker
 
 A narrow marquee directly below the dashboard header scrolls **up to three headlines right to left on one line**. It chooses from the most recent successful scan for each enabled source (maximum 10 candidate headlines per source). For each candidate headline, it counts occurrences of words currently appearing in the union of the 1-hour, 24-hour and 7-day Top 10 Word Count lists. The three highest-scoring headlines win; ties favour better front-page position, then a newer scan. Ignored words and phrases are excluded using the same tokenization as the word counts. It is independent of the dashboard's source, search and word-count checkbox filters.
@@ -108,7 +128,7 @@ php tests/ticker.php
 
 ## Word count dashboard
 
-The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows measured from the current UTC time, based on the `first_seen_at` timestamp of **unique stored headlines**. A headline contributes its title only once, even if the same link appears in multiple scans. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current ten per source**, and are independent of the dashboard source/search filters.
+The main dashboard shows three **Top 10 Words** lists: **1 hour**, **24 hours**, and **7 days**. These are rolling time windows measured from the current UTC time, based on the `last_seen_at` timestamp of **unique stored headlines**. A headline contributes its title only once per time window, even if the same link appears in multiple scans. A headline first discovered yesterday can still contribute to the 1-hour counts **when it appeared in a successful scan during the last hour**. Counts represent actual occurrences (a word appearing twice in one headline counts twice). These counts use the complete headline database collected during each time window, **not only the current ten per source**, and are independent of the dashboard source/search filters.
 
 The default ignored-word list includes ordinary English stop words such as `the`, `a`, `for`, `with`, etc. In **Settings → Word Count — Ignore List**, you can add either a word or phrase and remove existing entries. Matching is case-insensitive. Ignored phrases are removed as whole sequences before remaining words are counted, e.g., ignoring `breaking news` removes both words only when adjacent as that phrase. The defaults are seeded only once; removing one does not cause it to reappear. Edits take effect on the next dashboard load without changing any saved headlines.
 
