@@ -28,6 +28,19 @@ $cases=[
     ['Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race chevron_right','Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race'],
     ['A valid headline about the economy chevron_right chevron_right','A valid headline about the economy'],
     ['A headline about chevron_right icon rendering','A headline about chevron_right icon rendering'],
+    ['.css-1f6sr3w{color:#727272;}Gallery | Robots on show in Shenzhen ahead of Apec China 2026 summit',
+     'Robots on show in Shenzhen ahead of Apec China 2026 summit'],
+    ['US Test-Fires Nuclear-Capable ICBM Missile Ahead of Trump, Putin, Xi SummitNov 18, 2026, 21:09 IST',
+     'US Test-Fires Nuclear-Capable ICBM Missile Ahead of Trump, Putin, Xi Summit'],
+    ['Why Microsoft, JP Morgan, the FAA and the NSA All Went DownNov 18, 2026, 20:33 IST',
+     'Why Microsoft, JP Morgan, the FAA and the NSA All Went Down'],
+    ['.css-abc{color:red;} .css-def{font-weight:bold;} Some important headline appears',
+     'Some important headline appears'],
+    ['The CSS specification changes how .css-abc selectors work',
+     'The CSS specification changes how .css-abc selectors work'],
+    ['Apec China 2026 summit planned for Shenzhen','Apec China 2026 summit planned for Shenzhen'],
+    ['Nov 18, 2026, 21:09 IST','Nov 18, 2026, 21:09 IST'],
+    ['Date Nov 18, 2026 marks the beginning of voting','Date Nov 18, 2026 marks the beginning of voting'],
 ];
 foreach($cases as [$title,$expected]) {
     if(App::firstSentence($title)!==$expected) {
@@ -48,4 +61,4 @@ if(count($googleResult)!==1 || $googleResult[0]['title']!=='Mary Peltola defeats
     fwrite(STDERR,"FAIL: Google News chevron icon should not be stored\n");
     exit(1);
 }
-echo "PASS: extraction limits, sentence cleanup and chevron icon removal\n";
+echo "PASS: extraction limits, first sentence, CSS leakage, timestamp and chevron cleanup\n";
