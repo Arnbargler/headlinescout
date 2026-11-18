@@ -23,7 +23,7 @@ $appearance=$db->prepare('INSERT INTO appearances(scan_id,headline_id,position) 
 // One dominant topic, two distinct alternatives, and a tempting duplicate.
 $titles=[
     'Rocket rocket rocket rocket launch',
-    'Rocket rocket rocket booster',
+    str_repeat('Rocket ',20), // over 110 characters; must never be selected
     'Economy economy outlook',
     'Climate climate forecast',
     'Rocket rocket update',
@@ -41,7 +41,8 @@ check($items[0]['title']===$titles[0],'First headline must have strongest origin
 check($items[1]['title']===$titles[2],'Second headline should reward uncovered economy words');
 check($items[2]['title']===$titles[3],'Third headline should reward remaining uncovered climate words');
 check($items[0]['matches']===5,'Keep the original match count for the first headline');
-check(!in_array($titles[1],array_column($items,'title'),true),'Avoid dominant-topic repetition');
+check(mb_strlen($titles[1],'UTF-8')>110,'Fixture exceeds 110 Unicode characters');
+check(!in_array($titles[1],array_column($items,'title'),true),'Long headline must be excluded before ranking');
 check(!in_array($titles[5],array_column($items,'title'),true),'Exclude archived noncurrent headlines');
 
 echo "PASS: ticker diversity, ranking, current scan appearances and top-three limit\n";
