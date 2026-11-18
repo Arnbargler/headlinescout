@@ -98,3 +98,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @keyframes ticker-move{from{transform:translateX(0)}to{transform:translateX(-100%)}}
 @media(max-width:600px){.ticker-shell{gap:9px}.ticker-caption{font-size:10px}.ticker-story{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.ticker-scroll{animation:none;padding-left:0}.ticker-viewport{overflow-x:auto;mask-image:none}.ticker-track{width:max-content}}
+
+
+/* Word-count comparisons: relative bars and compact directional markers */
+.word-ranking li{gap:8px;align-items:center;min-height:35px}
+.word-ranking li:before{flex:0 0 20px}
+.word-ranking .word-label{flex:0 1 84px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.word-bar{flex:1 1 auto;height:8px;min-width:12px;background:#202f40;border-radius:99px;overflow:hidden}
+.word-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#147baf,#37c3eb);border-radius:99px;transition:width .35s ease}
+.word-ranking .word-total{flex:0 0 25px;text-align:right;font-size:13px}
+.word-direction{flex:0 0 34px;display:inline-flex;justify-content:center;align-items:center;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums}
+.direction-up{color:#43cf9c}
+.direction-down{color:#fa8b91}
+.direction-flat{color:#8fa7bd}
+.direction-new{font-size:10px;letter-spacing:.02em;color:#e9bd68;border:1px solid #77623a;border-radius:4px;line-height:20px}
+@media(max-width:420px){.word-ranking .word-label{flex-basis:68px}.word-direction{flex-basis:29px}}
