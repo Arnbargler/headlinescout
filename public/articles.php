@@ -18,12 +18,12 @@ if ($historical && $q!=='') {
     $history=\HeadlineScout\ArticleSearch::search($db,$q,$period,max(0,$sourceFilter),$page);
 }
 $sources=$db->query('SELECT id,name,last_success_at,last_status FROM sources WHERE enabled=1 ORDER BY id')->fetchAll();
-$trendingOnly=(($_GET['trending']??'')==='1');
+$trendingOnly=!$historical && (($_GET['trending']??'')==='1');
 $trendingWords=[];
 if ($trendingOnly) {
     $ignored=\HeadlineScout\WordStats::ignored($db);
-    foreach (['hour','day','week'] as $period) {
-        foreach (\HeadlineScout\StatsCache::period($db,$period,$ignored)['top'] as $word=>$count) {
+    foreach (['hour','day','week'] as $trendPeriod) {
+        foreach (\HeadlineScout\StatsCache::period($db,$trendPeriod,$ignored)['top'] as $word=>$count) {
             $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
         }
     }
