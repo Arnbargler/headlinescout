@@ -1,5 +1,16 @@
 # Roadmap
 
+## Five-headline collector and trending directions
+
+- [x] Restrict each future source scan to its first five qualifying headlines
+- [x] Dashboard and ticker read at most five current headlines per source
+- [x] Count unique headline appearances in current/prior rolling windows (1h, 24h, 7d)
+- [x] Compare current vs previous top-ten lists with up/down/flat/NEW markers
+- [x] Add relative-count bars with each column's largest count equal to a full bar
+- [x] Add scan time index and update regression tests
+- [ ] Validate new PHP syntax and regression tests on Colossus
+
+
 ## Hourly word counts and scan freshness
 
 - [x] Include unique headlines last observed in each rolling window, not only newly discovered headlines
