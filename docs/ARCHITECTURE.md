@@ -32,6 +32,7 @@ Browser
 | `src/Ticker.php` | Source-independent scoring and diversified selection of three eligible current headlines |
 | `bin/scan.php` | CLI collector; shared file lock; `--all` override |
 | `bin/benchmark-stats.php` | Non-destructive read-only statistics benchmark using isolated temporary cache |
+| `bin/clean-headlines.php` | Dry-run or transactionally repair existing saved titles; uses scan lock and clears word-statistics caches |
 | `public/index.php` | Dashboard six-panel Word Count |
 | `public/articles.php` | Latest per-source front pages plus term/time-range historical drilldowns, search and optional trending-word filter |
 | `public/settings.php` | Current Settings URL, includes `lab.php` |
@@ -58,7 +59,7 @@ Successful scans update current flags and appearances transactionally; failed ne
 
 Colossus uses intended twice-per-minute cron entries (actual crontab must be verified independently). Each CLI invocation selects three eligible sources, sorted by `last_scan_at + interval_seconds`; never-scanned sources take priority. The default source interval is 900 seconds. The same `var/scan.lock` protects cron collection and manual Settings scans; slow runs may cause a scheduled invocation to exit without performing additional scans. `--all` bypasses the eligibility check and three-source limit.
 
-HTTP fetching enforces public destinations, robots checks, timeouts and a bounded payload. At most three headline links are retained per source scan; Settings previews up to 120 extracted candidates. Article titles are reduced to their likely first sentence and stripped of trailing `chevron_right` icon words.
+HTTP fetching enforces public destinations, robots checks, timeouts and a bounded payload. At most three headline links are retained per source scan; Settings previews up to 120 extracted candidates. Article titles are reduced to their likely first sentence, with leading leaked CSS declarations/category labels and trailing publisher timestamps / `chevron_right` icon words removed. The repair CLI cleans older stored headline titles without deleting appearances or scans.
 
 ## Word analysis
 
