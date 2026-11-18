@@ -4,6 +4,22 @@
 
 **Status: working LAN installation on Colossus.** Automated collection uses cron; source management and manual scanning are available in Settings. Some sources can still reject scraping or require custom selectors.
 
+## Scan fairness and six analysis windows
+
+The once-per-minute cron job continues checking each source on its configured interval (normally **900 seconds / 15 minutes**) and scanning **at most three eligible sources per run**. Rather than scanning by source ID, the scheduler now prioritizes the **earliest due time** (most overdue first); never-scanned sources are considered first. `php bin/scan.php --all` continues to force every enabled source.
+
+The Dashboard Word Count grid is organized as two rows:
+
+| NOW | 1 hour | 24 hours |
+| --- | --- | --- |
+| 7 days | 30 days | 1 year |
+
+**NOW** is the last rolling 15 minutes compared with the immediately preceding 15 minutes. **30 days** compares rolling 30 days versus the preceding 30, and **1 year** compares rolling 365 days versus the preceding 365. The existing 1-hour, 24-hour, and 7-day comparisons retain the same behavior. All six panels retain the Top 10 ranking, colored bars, arrows/NEW markers, and live change flash effects. The live Word Count endpoint remains `/word-stats.php`, refreshed every 30 seconds.
+
+The 30-day and 1-year sections only use actual stored scan history. Until HeadlineScout accumulates two years of data, the previous-year comparison can be incomplete or empty; **NEW** means the word was absent from the previous period's Top 10, including when no old history is available. These comparisons are calculated from appearances in SQLite, not from external historical news archives.
+
+Tests: `php tests/scheduler.php`, `php tests/periods.php`, `php tests/word-stats.php`, and `php tests/ticker.php`.
+
 ## Live Word Count change highlights
 
 The Dashboard Word Count section now refreshes automatically **every 30 seconds** through a read-only `/word-stats.php` JSON endpoint and `/word-stats.js`. It does not trigger website scraping, modify scan schedules, or change stored data.
