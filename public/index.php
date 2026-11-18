@@ -11,11 +11,10 @@ $scansStale=$lastScanAt>0 && time()-$lastScanAt>3600;
 $ignored=\HeadlineScout\WordStats::ignored($db);
 $wordStats=[];
 foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
-    $wordStats[]=['label'=>$label,'rows'=>\HeadlineScout\WordStats::trending($db,$hours,$ignored)];
+    $wordStats[]=['hours'=>$hours,'label'=>$label,'rows'=>\HeadlineScout\WordStats::trending($db,$hours,$ignored)];
 }
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="refresh" content="300">
 <title>Dashboard | HeadlineScout</title><link rel="stylesheet" href="style.css"></head><body>
 <?php require __DIR__.'/_chrome.php'; ?>
 <main class="shell dashboard-page">
@@ -24,10 +23,10 @@ foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
 <div class="word-stats-title"><h2>WORD COUNT</h2><span>Mentions in unique headlines per period · arrows compare with previous matching period</span></div>
 <div class="word-stats-grid">
 <?php foreach($wordStats as $period): ?>
-<div class="word-period"><h3><?=e($period['label'])?></h3>
+<div class="word-period" data-hours="<?=(int)$period['hours']?>"><h3><?=e($period['label'])?></h3>
 <?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
 <ol class="word-ranking"><?php foreach($period['rows'] as $entry): ?>
-<li class="word-trend-<?=e($entry['direction'])?>">
+<li class="word-trend-<?=e($entry['direction'])?>" data-word="<?=e($entry['word'])?>" data-count="<?=(int)$entry['count']?>">
   <span class="word-label"><?=e($entry['word'])?></span>
   <span class="word-bar" aria-hidden="true"><span class="word-bar-fill" style="width:<?=e($entry['percent'])?>%"></span></span>
   <strong class="word-total"><?=(int)$entry['count']?></strong>
@@ -41,4 +40,4 @@ foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
 
 
 <footer>HeadlineScout · News trends and analysis · More insights coming soon</footer>
-</main><script src="/ticker.js" defer></script></body></html>
+</main><script src="/ticker.js" defer></script><script src="/word-stats.js" defer></script></body></html>
