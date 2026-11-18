@@ -12,7 +12,7 @@ Personal LAN news headline monitor built for experimentation and long-term word-
 - **Articles** `/articles.php`: default mode shows at most three latest successful homepage headlines per enabled source with source chooser, title substring search and optional top-word-only filter. Historical mode (`?q=word&period=now|hour|day|week|month|year`) searches successful scan appearances from the chosen rolling window, positions 1–3, whole-word title match, deduplicated headlines, 100 per page, source filtering. Last successful source scan shown.
 - **Settings** `/settings.php` with alias `/lab.php`: try six XPath strategies, save source/selector, scan now with shared lock, permanently remove source/history, maintain ignored words/phrases.
 - **Shared header** `public/_chrome.php`: brand, three navigation tabs and an upward rotating (about every 6.5 s) selection of up to three clickable headlines without source labels. >110-character titles ineligible. Select first by matching trending words; reward previously uncovered trending terms ×3 for subsequent picks. Poll every 15 s.
-- **Scanner**: `bin/scan.php` sorts due sources by next-due timestamp using `src/Scheduler.php`, at most three per run; `--all` scans all. Per-source default minimum interval 900 seconds (15 min). Colossus target scheduler cadence is 30 seconds using two cron entries (one `sleep 30`). Shared `var/scan.lock` prevents overlap. Each successful scan preserves at most three homepage link appearances and maintains historic data. Current title cleanup strips additional sentences and `chevron_right`.
+- **Scanner**: `bin/scan.php` sorts due sources by next-due timestamp using `src/Scheduler.php`, at most three per run; `--all` scans all. Per-source default minimum interval 900 seconds (15 min). Colossus target scheduler cadence is 30 seconds using two cron entries (one `sleep 30`). Shared `var/scan.lock` prevents overlap. Each successful scan preserves at most three homepage link appearances and maintains historic data. Title cleanup removes leaked leading CSS rules, gallery labels, appended publisher timestamp strings, additional sentences and `chevron_right`.
 
 ## File ownership
 
@@ -25,6 +25,12 @@ Schema: `sources`, `headlines`, `scans`, `appearances`, `ignored_terms`, `settin
 `src/StatsCache.php` maintains six independent file-backed snapshots under `var/cache/word-{key}.json` containing `top` and `rows`. Refresh intervals: NOW 30s, 1h 60s, 24h 300s, 7d 900s, 30d 3600s, 1y 21600s. Dashboard server-render and JSON endpoint, ticker scoring, and optional Articles trending filter now use the same snapshots. No new services or cron jobs. Ignore-list edits invalidate caches automatically via term fingerprints; **new scans refresh when each cache expires**, so 1-year rankings may trail up to six hours. File-lock concurrency means only one stale-period rebuild at a time; stale data is served to concurrent users during a rebuild. Browser polling remains at 30/15 seconds. Ensure `var/cache/` is writable on hosting and remains outside `public/`. A missing/unwritable directory falls back to live calculation.
 
 Benchmark: `php bin/benchmark-stats.php` on Colossus, comparing raw, cold and warm computations against existing historical DB, with benchmark cache written to system temp and deleted afterward. New regression: `php tests/stats-cache.php`.
+
+## Existing headline title repair
+
+The parser in `App::firstSentence()` now removes leading injected CSS declaration blocks (especially generated `.css-*{...}` rules), common gallery labels and trailing publication timestamps such as `Nov 18, 2026, 21:09 IST`, before preserving only the first sentence. Source URLs and legitimate dates within titles remain unchanged.
+
+New scans and Settings previews automatically use these rules. Previously persisted headlines are repaired with `php bin/clean-headlines.php` (dry run) and, after taking a consistent SQLite backup with `sqlite3 var/headlines.sqlite ".backup 'var/headlines-before-title-cleanup.sqlite.bak'"`, `php bin/clean-headlines.php --apply`. The apply mode locks against active scans, updates titles only in a transaction and clears word-statistics caches. It preserves stored headlines, IDs, URLs and historical appearances. Old information already truncated by previous extraction cannot be recovered without a new scan.
 
 ## Deployment verification
 
@@ -39,6 +45,7 @@ php -l src/Ticker.php
 php -l src/Scheduler.php
 php -l src/StatsCache.php
 php -l bin/scan.php
+php -l bin/clean-headlines.php
 for file in public/*.php; do php -l "$file" || break; done
 for test in tests/*.php; do php "$test" || break; done
 crontab -l
