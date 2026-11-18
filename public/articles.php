@@ -26,7 +26,7 @@ $matchesTrending=static function(string $title) use($trendingWords): bool {
 };
 $sections=[];$visibleCount=0;
 $latest=$db->prepare("SELECT id,finished_at FROM scans WHERE source_id=? AND status='success' ORDER BY id DESC LIMIT 1");
-$top=$db->prepare('SELECT h.title,h.url,h.first_seen_at,a.position FROM appearances a JOIN headlines h ON h.id=a.headline_id WHERE a.scan_id=? ORDER BY a.position ASC LIMIT 5');
+$top=$db->prepare('SELECT h.title,h.url,h.first_seen_at,a.position FROM appearances a JOIN headlines h ON h.id=a.headline_id WHERE a.scan_id=? ORDER BY a.position ASC LIMIT 3');
 foreach($sources as $source){
     if($sourceFilter && $sourceFilter!==(int)$source['id']) continue;
     $latest->execute([$source['id']]);$scan=$latest->fetch();$items=[];
@@ -43,7 +43,7 @@ foreach($sources as $source){
 <?php require __DIR__.'/_chrome.php'; ?>
 <main class="shell articles-page">
 <section class="panel">
-<div class="panel-head"><h2>CURRENT FRONT PAGES</h2><span><?=$visibleCount?> headlines · up to 5 per source</span></div>
+<div class="panel-head"><h2>CURRENT FRONT PAGES</h2><span><?=$visibleCount?> headlines · up to 3 per source</span></div>
 <form method="get" class="filters">
 <label>Source <select name="source"><option value="0">All sources</option><?php foreach($sources as $s): ?><option value="<?=(int)$s['id']?>" <?=$sourceFilter===(int)$s['id']?'selected':''?>><?=e($s['name'])?></option><?php endforeach; ?></select></label>
 <label class="search">Search current headlines <input type="search" name="q" placeholder="Filter displayed headlines" value="<?=e($q)?>"></label>
@@ -57,7 +57,7 @@ foreach($sources as $source){
 <span><?= $scan ? 'Last successful scan: '.e(gmdate('M j, H:i',strtotime($scan['finished_at']))).' UTC' : 'Not yet scanned' ?></span>
 </div>
 <?php if(!$items): ?>
-<div class="source-empty"><?= ($q!=='' || $trendingOnly) ? 'No headlines match the selected filters in this source’s latest top 5.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Settings.') ?></div>
+<div class="source-empty"><?= ($q!=='' || $trendingOnly) ? 'No headlines match the selected filters in this source’s latest top 3.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Settings.') ?></div>
 <?php else: ?>
 <div class="entries">
 <?php foreach($items as $h): ?>
@@ -69,5 +69,5 @@ foreach($sources as $source){
 </div>
 <?php endforeach; ?>
 </section>
-<footer>HeadlineScout · Current front pages · Latest 5 headlines per source</footer>
+<footer>HeadlineScout · Current front pages · Latest 3 headlines per source</footer>
 </main><script src="/ticker.js" defer></script></body></html>
