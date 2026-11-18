@@ -122,3 +122,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .articles-page{padding-top:24px}
 .dashboard-page{padding-bottom:16px}
 @media(max-width:520px){.section-tabs-inner{gap:0}.section-tab{flex:1;padding:11px 8px;font-size:13px}}
+
+/* Live Word Count: short change highlight without disturbing trend-bar colors */
+.word-ranking li.word-change-flash{
+    border-radius:6px;
+    animation:word-change-highlight 1.65s ease-out 1;
+}
+@keyframes word-change-highlight{
+    0%{background-color:rgba(57,185,233,.26);box-shadow:0 0 0 1px rgba(57,185,233,.55),0 0 18px rgba(57,185,233,.25)}
+    28%{background-color:rgba(57,185,233,.19);box-shadow:0 0 0 1px rgba(57,185,233,.35),0 0 12px rgba(57,185,233,.16)}
+    100%{background-color:transparent;box-shadow:none}
+}
+@media(prefers-reduced-motion:reduce){
+    .word-ranking li.word-change-flash{animation:none}
+}
