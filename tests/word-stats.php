@@ -1,33 +1,61 @@
 #!/usr/bin/env php
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/src/WordStats.php';
+require dirname(__DIR__).'/src/App.php';
+use HeadlineScout\App;
 use HeadlineScout\WordStats;
 
 $db=new PDO('sqlite::memory:',null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);
-$db->exec('CREATE TABLE settings(key TEXT PRIMARY KEY,value TEXT NOT NULL)');
-$db->exec('CREATE TABLE headlines(id INTEGER PRIMARY KEY,title TEXT NOT NULL,first_seen_at TEXT NOT NULL,last_seen_at TEXT NOT NULL)');
-WordStats::install($db);
-$now=gmdate('c');
-$insert=$db->prepare('INSERT INTO headlines(title,first_seen_at,last_seen_at) VALUES(?,?,?)');
-$insert->execute(['The rocket launch with rocket boosters',gmdate('c',time()-2*86400),$now]); // old headline still present
-$insert->execute(['Breaking News about the rocket',gmdate('c',time()-7200),gmdate('c',time()-7200)]);
-$insert->execute(['Rocket launch after historic test',gmdate('c',time()-3*86400),gmdate('c',time()-3*86400)]);
-$insert->execute(['Rocket technology from last month',gmdate('c',time()-35*86400),gmdate('c',time()-35*86400)]);
-WordStats::add($db,'rocket launch');
-$ignored=WordStats::ignored($db);
-$one=WordStats::top($db,1,$ignored);
-$day=WordStats::top($db,24,$ignored);
-$week=WordStats::top($db,168,$ignored);
-function verify(bool $yes,string $message):void {
-    if (!$yes) {fwrite(STDERR,"FAIL: $message\n");exit(1);}
+App::install($db);
+function verify(bool $ok,string $message):void {
+    if (!$ok) {fwrite(STDERR,"FAIL: $message\n");exit(1);}
 }
-verify(($one['rocket']??0)===1,'Old headline still observed within last hour counts, ignoring matching phrase');
-verify(isset($one['boosters'])&&$one['boosters']===1,'Word after ignored phrase must remain');
-verify(($day['rocket']??0)===2,'Twenty-four-hour window includes two distinct rocket mentions');
-verify(($week['rocket']??0)===2,'7-day range excludes ignored phrase and older month');
-verify(!isset($week['the'])&&!isset($week['with']),'Default ignored words are omitted');
+$source=(int)$db->query('SELECT id FROM sources ORDER BY id LIMIT 1')->fetchColumn();
+$insertHeadline=$db->prepare('INSERT INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
+$insertScan=$db->prepare("INSERT INTO scans(source_id,started_at,finished_at,status,http_status,found,added) VALUES(?,?,?,'success',200,0,0)");
+$insertAppearance=$db->prepare('INSERT INTO appearances(scan_id,headline_id,position) VALUES(?,?,?)');
+$now=time();
+$headlineIds=[];
+$add=function (int $minutesAgo,array $titles) use ($db,$source,$now,$insertHeadline,$insertScan,$insertAppearance,&$headlineIds): void {
+    $ts=gmdate('c',$now-$minutesAgo*60);
+    $insertScan->execute([$source,$ts,$ts]);
+    $scanId=(int)$db->lastInsertId();
+    foreach($titles as $position=>$title){
+        if (!isset($headlineIds[$title])) {
+            $insertHeadline->execute([$source,'https://example.org/item-'.count($headlineIds),$title,$ts,$ts]);
+            $headlineIds[$title]=(int)$db->lastInsertId();
+        }
+        $insertAppearance->execute([$scanId,$headlineIds[$title],$position+1]);
+    }
+};
+$add(30,['Rocket market rocket launch','Market economy market','Drone economy','Tech progress']);
+$add(15,['Rocket market rocket launch']); // same headline in second scan, counts only once
+$add(90,['Rocket rocket drone','Market drone','Tech progress previous']);
+$add(120,['Market tech']);
+$add(26*60,['Drone tech yesterday']);
+$add(3*24*60,['Tech market week']);
+$add(9*24*60,['Drone from earlier week']);
+
+WordStats::add($db,'rocket launch');
+$ignore=WordStats::ignored($db);
+$current=WordStats::top($db,1,$ignore);
+$previous=WordStats::counts($db,$ignore,$now-7200,$now-3600);
+verify(($current['market']??0)===3,'Current hour counts 3 market occurrences without repeat scans');
+verify(($current['rocket']??0)===1,'Ignore phrase removes rocket launch but keeps standalone rocket');
+verify(($previous['rocket']??0)===2,'Previous hour remains accessible after a more recent scan');
+verify(($current['economy']??0)===2,'Current hour counts economy');
+$rows=WordStats::trending($db,1,$ignore);
+$byWord=array_column($rows,null,'word');
+verify($byWord['market']['direction']==='up','Market trends up vs preceding hour');
+verify($byWord['rocket']['direction']==='down','Rocket trends down vs preceding hour');
+verify($byWord['tech']['direction']==='flat','Tech maintains same mention count');
+verify($byWord['economy']['direction']==='new','Economy is new to previous top 10');
+verify($byWord['market']['percent']===100.0,'Top count always receives full bar');
+verify($byWord['economy']['percent']<100,'Smaller count receives shorter bar');
+$day=WordStats::top($db,24,$ignore);
+verify(($day['market']??0)===5,'24-hour window counts all unique relevant headlines');
+verify(!isset($day['the']),'Stop words are excluded');
 $id=$db->query("SELECT id FROM ignored_terms WHERE term='rocket launch'")->fetchColumn();
-verify(WordStats::remove($db,(int)$id),'Ignore phrase should be removable');
-verify(($week=WordStats::top($db,168,WordStats::ignored($db)))['rocket']===4,'Removed phrase restores counts');
-echo "PASS: word frequency, time windows, ignored words and phrases\n";
+verify(WordStats::remove($db,(int)$id),'Ignore phrase can be removed');
+verify((WordStats::top($db,1,WordStats::ignored($db))['rocket']??0)===2,'Removing ignored phrase restores rocket count');
+echo "PASS: rolling periods, comparisons, deduplication, ignored phrases and proportional bars\n";
