@@ -42,6 +42,13 @@ try {
         if($db->inTransaction()) $db->rollBack();
         throw $e;
     }
+    if($apply && $changed>0){
+        // Fresh word rankings should reflect repaired titles on the next read.
+        foreach(array_keys(\HeadlineScout\StatsCache::TTL) as $period){
+            $file=dirname(__DIR__).'/var/cache/word-'.$period.'.json';
+            if(is_file($file)) @unlink($file);
+        }
+    }
     printf("%s: checked %d stored headlines; %d %s.\n",
         $apply?'APPLIED':'DRY RUN',$checked,$changed,$apply?'updated':'would change');
     if(!$apply) echo "No data was modified. Back up var/headlines.sqlite, then run: php bin/clean-headlines.php --apply\n";
