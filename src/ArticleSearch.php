@@ -38,7 +38,14 @@ WHERE sc.status='success' AND sc.started_at>=? AND sc.started_at<?
 GROUP BY h.id
 ORDER BY matched_at DESC,h.id DESC
 SQL);
-        $stmt->execute([$start,$end,$source,$source,$term]);
+        $stmt->bindValue(1,$start,PDO::PARAM_STR);
+        $stmt->bindValue(2,$end,PDO::PARAM_STR);
+        // PDO::execute(array) binds values as strings; SQLite does not consider
+        // text "0" equal to integer 0 for the all-sources condition (?=0).
+        $stmt->bindValue(3,$source,PDO::PARAM_INT);
+        $stmt->bindValue(4,$source,PDO::PARAM_INT);
+        $stmt->bindValue(5,$term,PDO::PARAM_STR);
+        $stmt->execute();
         $page=max(1,$page);
         $skip=($page-1)*self::PAGE_SIZE;
         $items=[];$seen=0;
