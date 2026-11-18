@@ -37,6 +37,9 @@ $items=Ticker::items($db);
 check(count($items)===3,'Ticker should pick exactly three from latest appearances');
 check($items[0]['title']===$titles[0],'Highest matching-word count wins');
 check($items[1]['title']===$titles[2],'Two rocket mentions beats one');
-check($items[2]['title']===$titles[1],'Third ranking uses matching mentions');
+// 'Market report today' has three qualifying words, while 'Rocket market' has two.
+check($items[2]['title']===$titles[3],'Third ranking includes all trending words, not only rocket');
+check($items[1]['matches']===$items[2]['matches'],'Equal match counts should invoke homepage-position tie-break');
+check($items[1]['matches']===3,'Three matching mentions should be scored for both tied headlines');
 check(!in_array($titles[4],array_column($items,'title'),true),'Do not include archived/noncurrent headlines');
 echo "PASS: ticker ranking, current scan appearances and top-three limit\n";
