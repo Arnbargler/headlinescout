@@ -6,7 +6,10 @@
 
 ## Scan fairness and six analysis windows
 
-The once-per-minute cron job continues checking each source on its configured interval (normally **900 seconds / 15 minutes**) and scanning **at most three eligible sources per run**. Rather than scanning by source ID, the scheduler now prioritizes the **earliest due time** (most overdue first); never-scanned sources are considered first. `php bin/scan.php --all` continues to force every enabled source.
+**Colossus scheduling:** Standard cron supports minute granularity, so run two entries: one at the start of each minute and one delayed by `sleep 30`. Keep the existing first entry and add the second (avoid duplicate entries). Each invocation selects up to three of the most overdue *due* sources, honoring the per-source 15-minute interval. The existing `scan.lock` prevents overlapping runs; if a prior scan takes longer than 30 seconds, the next invocation skips rather than running concurrently. Since individual fetch requests permit up to 25 seconds and robots checks can add requests, 30 seconds is a best-effort scheduler cadence, not a guaranteed completion time. Edit the actual Colossus user crontab with `crontab -e`; pulling this repository does not install cron entries automatically.
+
+
+The twice-per-minute cron schedule checks each source on its configured interval (normally **900 seconds / 15 minutes**) and scanning **at most three eligible sources per run**. Rather than scanning by source ID, the scheduler now prioritizes the **earliest due time** (most overdue first); never-scanned sources are considered first. `php bin/scan.php --all` continues to force every enabled source.
 
 The Dashboard Word Count grid is organized as two rows:
 
@@ -100,6 +103,7 @@ Edit with \`crontab -e\` and add (replace \`YOUR_USER\` with your actual Linux l
 
 \`\`\`cron
 * * * * * /usr/bin/php /home/YOUR_USER/headlinescout/bin/scan.php >> /home/YOUR_USER/headlinescout/var/cron.log 2>&1
+* * * * * sleep 30; /usr/bin/php /home/YOUR_USER/headlinescout/bin/scan.php >> /home/YOUR_USER/headlinescout/var/cron.log 2>&1
 \`\`\`
 
 **Do not install cron until the first manual scan has been examined.** The first three sources are intentionally unverified. Once deployed externally, use a provider cron facility and consider 1800-second source intervals.
@@ -177,9 +181,10 @@ If the personal crontab is empty, run `crontab -e` and add this entry for the kn
 
 ```cron
 * * * * * /usr/bin/php /home/arn/headlinescout/bin/scan.php >> /home/arn/headlinescout/var/cron.log 2>&1
+* * * * * sleep 30; /usr/bin/php /home/arn/headlinescout/bin/scan.php >> /home/arn/headlinescout/var/cron.log 2>&1
 ```
 
-The one-minute cron tick only scans a source when its own configured 15-minute interval has elapsed. To immediately refresh all enabled sources, run `php bin/scan.php --all`. A successful scan updates each headline's `last_seen_at`; the word counts then include each distinct headline once per time window.
+Each 30-second cron tick attempts up to three of the most overdue eligible sources and only scans a source when its own configured 15-minute interval has elapsed. To immediately refresh all enabled sources, run `php bin/scan.php --all`. A successful scan updates each headline's `last_seen_at`; the word counts then include each distinct headline once per time window.
 
 ## Top three headline rotator
 
