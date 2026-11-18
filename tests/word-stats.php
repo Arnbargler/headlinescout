@@ -29,6 +29,7 @@ $add=function (int $minutesAgo,array $titles) use ($db,$source,$now,$insertHeadl
     }
 };
 $add(30,['Rocket market rocket launch','Market economy market','Drone economy','Tech progress']);
+$add(30,['Tech progress']); // prior fourth-place item is now retained via a separate top-three scan
 $add(15,['Rocket market rocket launch']); // same headline in second scan, counts only once
 $add(90,['Rocket rocket drone','Market drone','Tech progress previous']);
 $add(150,['Market tech']);
