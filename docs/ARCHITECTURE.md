@@ -34,7 +34,7 @@ Browser
 | `bin/benchmark-stats.php` | Non-destructive read-only statistics benchmark using isolated temporary cache |
 | `bin/clean-headlines.php` | Dry-run or transactionally repair existing saved titles; uses scan lock and clears word-statistics caches |
 | `public/index.php` | Dashboard six-panel Word Count |
-| `public/articles.php` | Latest per-source front pages plus term/time-range historical drilldowns, search and optional trending-word filter |
+| `public/articles.php` | Single combined newest-scan-first default feed (one #1 headline per source), grouped current filtered results and term/time-range historical drilldowns |
 | `public/settings.php` | Current Settings URL, includes `lab.php` |
 | `public/lab.php` | Settings forms, source management, manual scans, ignore terms; retained URL for compatibility |
 | `public/_chrome.php` | Shared header, top-headline rotator markup and navigation |
