@@ -12,7 +12,7 @@
         ])
     );
 
-    const createRow = (entry, index, before) => {
+    const createRow = (entry, index, before, periodKey) => {
         const li = document.createElement('li');
         const direction = Object.hasOwn(symbols,entry.direction) ? entry.direction : 'flat';
         const name = String(entry.word);
@@ -20,6 +20,11 @@
         li.className = 'word-trend-' + direction;
         li.dataset.word = name;
         li.dataset.count = String(count);
+        const detail = document.createElement('a');
+        detail.className = 'word-detail-link';
+        detail.href = '/articles.php?' + new URLSearchParams({q:name, period:periodKey});
+        detail.setAttribute('aria-label', 'View headlines containing ' + name + ' from ' + periodKey);
+        detail.title = 'View matching headlines';
         if (!before.has(name) || before.get(name).position !== index || before.get(name).count !== count) {
             li.classList.add('word-change-flash');
         }
@@ -45,7 +50,7 @@
         arrow.textContent = symbols[direction];
         arrow.title = direction === 'new' ? 'Not in previous top 10' : 'Previous period: ' + entry.previous + ' mentions';
         arrow.setAttribute('aria-label',descriptions[direction]);
-        li.append(label,bar,total,arrow);
+        li.append(detail,label,bar,total,arrow);
         return li;
     };
 
@@ -62,7 +67,7 @@
 
         const list = document.createElement('ol');
         list.className = 'word-ranking';
-        rows.forEach((r,index) => list.appendChild(createRow(r,index,before)));
+        rows.forEach((r,index) => list.appendChild(createRow(r,index,before,period.dataset.period)));
 
         period.querySelector('.word-ranking, .word-empty')?.remove();
         if (rows.length) {
