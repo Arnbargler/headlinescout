@@ -34,11 +34,21 @@ try {
     ensure(($first['top']['rocket']??null)===1,'first snapshot has rocket term');
     ensure($first['rows']===WordStats::snapshot($db,3600,$ignored,$first['calculated_at'])['rows'],'cached rows match original calculation');
     ensure($first['expires_at']-$first['calculated_at']===60,'hour cache expires in one minute');
+    // All six windows must notice a new successful scan even if their
+    // respective cache TTLs have not expired (e.g. 7 days vs. 1 year).
+    $yearBefore=StatsCache::period($db,'year',$ignored,$dir);
     $add('Satellite economy develops');
     $warm=StatsCache::period($db,'hour',$ignored,$dir);
-    ensure($warm['top']===$first['top'],'repeat read uses warm cached snapshot');
+    ensure(($warm['top']['satellite']??null)===1,'new scan invalidates warm hour cache');
+    ensure($warm['scan_revision']>$first['scan_revision'],'new scan changes cached revision');
     $day=StatsCache::period($db,'day',$ignored,$dir);
     ensure(($day['top']['satellite']??null)===1,'independent day cache captures newer data');
+    $yearAfter=StatsCache::period($db,'year',$ignored,$dir);
+    ensure(($yearAfter['top']['satellite']??null)===1,'new scan invalidates even unexpired yearly cache');
+    ensure($yearAfter['scan_revision']>$yearBefore['scan_revision'],'yearly revision follows newest scan');
+    ensure($yearAfter['scan_revision']===$day['scan_revision'],'long and short periods use the same scan revision');
+    $stillWarm=StatsCache::period($db,'hour',$ignored,$dir);
+    ensure($stillWarm['calculated_at']===$warm['calculated_at'],'no recalculation without scan or TTL expiry');
     $file=$dir.'/word-hour.json';
     $expired=json_decode(file_get_contents($file),true);
     $expired['expires_at']=0;
@@ -51,7 +61,7 @@ try {
     ensure(!isset($invalidated['top']['satellite']),'ignore-list change invalidates warm cache');
     ensure($invalidated['ignore_hash']!==$recomputed['ignore_hash'],'cache marker changes with ignore list');
     ensure(StatsCache::period($db,'year',$ignored,$dir)['expires_at']-time()<=21600,'year period uses six-hour ttl');
-    echo "PASS: independent cache TTLs, source snapshots, warm hits, expiry, ignore-list invalidation\n";
+    echo "PASS: independent cache TTLs, source snapshots, warm hits, scan-revision invalidation, expiry, ignore-list invalidation\n";
 } finally {
     foreach(glob($dir.'/*')?:[] as $file) @unlink($file);
     @rmdir($dir);
