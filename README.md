@@ -72,7 +72,18 @@ The desired Colossus cron cadence is **every 30 seconds** (two standard minute e
 
 **Git does not install cron entries.** Confirm with `crontab -l` on Colossus. `var/scan.lock` avoids concurrent scheduled and manual scans. Three slow sites may take longer than 30 seconds; skipped overlapping invocations are expected.
 
-Source fetching uses cURL, public-host checks, robots.txt checks, bounded redirects, timeouts and download-size limits. XPath extraction keeps at most three qualifying same-site headlines for each collection scan, while Settings previews more candidates for method selection. Headline titles are cleaned to the first likely sentence; trailing Google News `chevron_right` is removed. Existing article URLs and historical appearances are retained.
+Source fetching uses cURL, public-host checks, robots.txt checks, bounded redirects, timeouts and download-size limits. XPath extraction keeps at most three qualifying same-site headlines for each collection scan, while Settings previews more candidates for method selection. Headline titles are cleaned to the first likely sentence. Leading leaked CSS declarations (such as `.css-abc{color:red;}`), gallery labels, appended publication date/time/timezone strings and trailing Google News `chevron_right` are removed conservatively; legitimate dates inside story titles are retained. Existing article URLs and historical appearances are retained.
+
+**Clean titles already saved in SQLite:** the new parser applies to future scans automatically, but previously stored titles must be repaired separately. First preview any changes, make a consistent SQLite backup, then apply:
+
+```bash
+cd ~/headlinescout
+php bin/clean-headlines.php
+sqlite3 var/headlines.sqlite ".backup 'var/headlines-before-title-cleanup.sqlite.bak'"
+php bin/clean-headlines.php --apply
+```
+
+The repair script uses the normal scan lock, updates **titles only** in a transaction, preserves article IDs/URLs/scan history, and clears cached Word Count results after success. It prints the first 15 before/after examples and totals. The backup stays outside Git and can be removed after verification. Very old titles previously truncated by the original parser cannot be reconstructed; a fresh source scan may restore them.
 
 Reloading pages does **not** trigger website scraping.
 
@@ -103,6 +114,7 @@ php -l src/StatsCache.php
 php -l src/Ticker.php
 php -l src/Scheduler.php
 php -l bin/scan.php
+php -l bin/clean-headlines.php
 for file in public/*.php; do php -l "$file" || break; done
 for test in tests/*.php; do php "$test" || break; done
 crontab -l
