@@ -20,6 +20,12 @@ See `docs/ARCHITECTURE.md` for full map. Main work areas: `src/App.php` (fetch/e
 
 Schema: `sources`, `headlines`, `scans`, `appearances`, `ignored_terms`, `settings`. Historical appearances underpin the 30-day and 365-day comparisons, so preserving the SQLite DB matters.
 
+## Shared analytics cache (added 2026-11-18)
+
+`src/StatsCache.php` maintains six independent file-backed snapshots under `var/cache/word-{key}.json` containing `top` and `rows`. Refresh intervals: NOW 60s, 1h 60s, 24h 300s, 7d 900s, 30d 3600s, 1y 21600s. Dashboard server-render and JSON endpoint, ticker scoring, and optional Articles trending filter now use the same snapshots. No new services or cron jobs. Ignore-list edits invalidate caches automatically via term fingerprints; **new scans refresh when each cache expires**, so 1-year rankings may trail up to six hours. File-lock concurrency means only one stale-period rebuild at a time; stale data is served to concurrent users during a rebuild. Browser polling remains at 30/15 seconds. Ensure `var/cache/` is writable on hosting and remains outside `public/`. A missing/unwritable directory falls back to live calculation.
+
+Benchmark: `php bin/benchmark-stats.php` on Colossus, comparing raw, cold and warm computations against existing historical DB, with benchmark cache written to system temp and deleted afterward. New regression: `php tests/stats-cache.php`.
+
 ## Deployment verification
 
 From Colossus, after `git pull`:
@@ -31,6 +37,7 @@ php -l src/WordStats.php
 php -l src/SourceLab.php
 php -l src/Ticker.php
 php -l src/Scheduler.php
+php -l src/StatsCache.php
 php -l bin/scan.php
 for file in public/*.php; do php -l "$file" || break; done
 for test in tests/*.php; do php "$test" || break; done
@@ -45,7 +52,7 @@ The expected Colossus cron lines are listed in README. Git commits do not instal
 ## Known limitations and cautions
 
 1. **Empty-success scanner issue:** `App::scan()` currently treats HTTP 200 plus zero extracted items as success and may mark all previous headlines non-current. A fix should distinguish genuinely empty pages from selector failure; do not blindly rewrite history.
-2. **Long-term performance:** The 30-day/365-day comparisons run historical distinct-headline queries on requests; benchmark before accumulated history becomes large, cache only if needed.
+2. **Long-term performance:** Word Count and ticker now share timed snapshots. A cache miss still scans historical distinct headlines, including for the 365-day period. Benchmark with `php bin/benchmark-stats.php` after history has grown; consider daily aggregation only if measured cold-refresh cost becomes problematic.
 3. **No public authentication:** Settings is write-enabled on LAN. CSRF exists but is no substitute for access control.
 4. **Historical comparisons:** NEW means absent from previous period's top ten; 1-year needs 730 days for full prior/current coverage. Counts are *word occurrences in distinct visible headlines*, not unique stories across sites.
 5. **Web scraping limits:** Source selectors depend on actual fetched HTML; some sites block crawlers. Respect robots and don't bypass paywalls.
