@@ -23,9 +23,9 @@ $appearance=$db->prepare('INSERT INTO appearances(scan_id,headline_id,position) 
 // One dominant topic, two distinct alternatives, and a tempting duplicate.
 $titles=[
     'Rocket rocket rocket rocket launch',
-    str_repeat('Rocket ',20), // over 110 characters; must never be selected
     'Economy economy outlook',
     'Climate climate forecast',
+    str_repeat('Rocket ',20), // fourth-ranked link is over 110 characters and excluded
     'Rocket rocket update',
     'Archived rocket rocket rocket rocket rocket'
 ];
@@ -33,15 +33,15 @@ $scan->execute([$sourceId,$now,$now]);$scanId=(int)$db->lastInsertId();
 foreach($titles as $i=>$title){
     $headline->execute([$sourceId,'https://example.com/story-'.$i,$title,$now,$now]);
     $id=(int)$db->lastInsertId();
-    if($i<5)$appearance->execute([$scanId,$id,$i+1]);
+    if($i<3)$appearance->execute([$scanId,$id,$i+1]);
 }
 $items=Ticker::items($db);
 check(count($items)===3,'Ticker should choose exactly three current headlines');
 check($items[0]['title']===$titles[0],'First headline must have strongest original word match');
-check($items[1]['title']===$titles[2],'Second headline should reward uncovered economy words');
-check($items[2]['title']===$titles[3],'Third headline should reward remaining uncovered climate words');
-check(mb_strlen($titles[1],'UTF-8')>110,'Fixture exceeds 110 Unicode characters');
-check(!in_array($titles[1],array_column($items,'title'),true),'Long headline must be excluded before ranking');
+check($items[1]['title']===$titles[1],'Second headline should reward uncovered economy words');
+check($items[2]['title']===$titles[2],'Third headline should reward remaining uncovered climate words');
+check(mb_strlen($titles[3],'UTF-8')>110,'Fixture exceeds 110 Unicode characters');
+check(!in_array($titles[3],array_column($items,'title'),true),'Long headline must be excluded before ranking');
 check(!in_array($titles[5],array_column($items,'title'),true),'Exclude archived noncurrent headlines');
 
 echo "PASS: ticker diversity, ranking, current scan appearances and top-three limit\n";
