@@ -37,6 +37,8 @@ SQL;
         $rows=$db->query($sql)->fetchAll();
         $candidates=[];
         foreach ($rows as $row) {
+            // Long titles are not eligible for the three-slot header rotator.
+            if (mb_strlen($row['title'],'UTF-8') > 110) continue;
             $matching=[];
             foreach (WordStats::tokens($row['title'],$ignored) as $word) {
                 if (isset($trending[$word])) $matching[]=$word;
@@ -74,7 +76,6 @@ SQL;
         return array_map(static fn($row)=>[
             'title'=>$row['title'],
             'url'=>$row['url'],
-            'source'=>$row['source_name'],
             'matches'=>$row['matches']
         ],$selected);
     }
