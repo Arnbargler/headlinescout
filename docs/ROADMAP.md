@@ -4,10 +4,10 @@ This file tracks **forward-looking work only**; implemented behaviour is documen
 
 ## Current baseline
 
-- Three tabs: Dashboard (six Word Count windows), Articles (five current items/source), Settings (source/ignore management).
+- Three tabs: Dashboard (six Word Count windows), Articles (three current items/source), Settings (source/ignore management).
 - Shared vertical three-headline rotator with 110-character eligibility and diversity-aware ranking.
 - Current/prior rolling windows: NOW 15 min, 1 h, 24 h, 7 d, 30 d and 365 d. Live updates, colored bars, short change highlights.
-- PHP/SQLite collector honors robots, extracts up to five headline links per source, retains scan history, and schedules up to three most-overdue eligible sources per run.
+- PHP/SQLite collector honors robots, extracts up to three headline links per source, retains scan history, and schedules up to three most-overdue eligible sources per run.
 - Intended local cron tick every 30 seconds; user must verify actual crontab on Colossus.
 
 ## Recommended next improvements
@@ -16,7 +16,7 @@ This file tracks **forward-looking work only**; implemented behaviour is documen
 2. **Monitor long-term cold-cache performance.** Six Dashboard windows and the ticker now share TTL-based snapshots, avoiding repeated full historical queries on browser polls. Benchmark misses/hits with `php bin/benchmark-stats.php` as months of data accumulate. Consider daily aggregation only when the cold-refresh time justifies it.
 3. **Watch live scan health.** Add a compact freshness/failed-source indicator if the Dashboard needs it; avoid restoring the discarded summary-card layout by default.
 4. **Add new analysis modules.** Dashboard now has room for richer statistics; define each report and its data contract before adding code.
-5. **Consider a History page.** Current Articles intentionally shows the latest five per source only. Keep the historical records available for future browsing/reporting.
+5. **Consider a History page.** Current Articles intentionally shows the latest three per source only. Keep the historical records available for future browsing/reporting.
 6. **Optional article-level AI summaries.** Not yet built. Keep it separate from the deterministic scanner and clearly label generated interpretations.
 7. **Security for public hosting.** Settings is currently unauthenticated, suitable only for a trusted LAN. Public deployment requires actual authentication/access control and a hardened web server.
 8. **Tests / operational checks.** Establish automatic PHP/JS regression checks and verify browser behaviour. The existing CLI tests run against in-memory SQLite and don't validate Colossus's live cron/web server.
