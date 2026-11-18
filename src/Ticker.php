@@ -21,7 +21,7 @@ final class Ticker {
         if (!$trending) return [];
 
         $sql=<<<'SQL'
-SELECT h.title,h.url,s.name AS source_name,h.id AS headline_id,
+SELECT h.title,h.url,h.id AS headline_id,
        a.position,sc.id AS scan_id
 FROM sources s
 JOIN scans sc ON sc.id=(
