@@ -58,6 +58,8 @@ The expected Colossus cron lines are listed in README. Git commits do not instal
 - Avoided three historical Word Count queries on Articles when the optional top-word filter is disabled.
 - Updated Settings ignore-list instructions from three to six periods and removed an old CLI-only scan instruction.
 - Rewrote README, Architecture, Data Model, Sources, Roadmap for **current state** rather than unimplemented design proposals.
+- Removed unused ticker `source_name` selection and match-count JSON field; removed test-only `WordStats::trending()` compatibility wrapper and updated its regression tests to call `trendingSeconds()`.
+- Simplified the navigation test's old ticker placeholder handling.
 - Kept `/lab.php` compatibility, `SourceLab` diagnostic extraction mode, CSS for actual Settings actions, existing regression tests, and retained historical SQLite schema/data semantics.
 
 ## Suggested next action
