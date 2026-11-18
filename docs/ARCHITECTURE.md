@@ -15,7 +15,8 @@ Browser
   -> index.php / articles.php / settings.php (server-rendered HTML)
      -> _chrome.php (shared brand, three tabs, rotating headlines)
      -> ticker.js -> ticker.php -> src/Ticker.php (15 s polling)
-     -> word-stats.js -> word-stats.php -> src/WordStats.php (30 s polling, Dashboard only)
+     -> word-stats.js -> word-stats.php (30 s polling, Dashboard only)
+     -> src/StatsCache.php -> src/WordStats.php (shared timed snapshots, var/cache/)
 ```
 
 ## Files
@@ -26,8 +27,10 @@ Browser
 | `src/Scheduler.php` | Prioritize up to three due sources by earliest next-due timestamp |
 | `src/SourceLab.php` | One-page fetch with six alternative XPath strategies for Settings preview |
 | `src/WordStats.php` | Ignore rules, tokens, deduplicated historical counts, six rolling comparisons |
+| `src/StatsCache.php` | Shared, independently timed file-backed snapshots of trend rows and top words; ignore-list invalidation |
 | `src/Ticker.php` | Source-independent scoring and diversified selection of three eligible current headlines |
 | `bin/scan.php` | CLI collector; shared file lock; `--all` override |
+| `bin/benchmark-stats.php` | Non-destructive read-only statistics benchmark using isolated temporary cache |
 | `public/index.php` | Dashboard six-panel Word Count |
 | `public/articles.php` | Latest per-source front pages, search and optional trending-word filter |
 | `public/settings.php` | Current Settings URL, includes `lab.php` |
@@ -58,9 +61,9 @@ HTTP fetching enforces public destinations, robots checks, timeouts and a bounde
 
 ## Word analysis
 
-`WordStats::periods()` defines the six periods: 900, 3600, 86400, 604800, 2592000 and 31536000 seconds. `trendingSeconds()` compares adjacent equal-length rolling windows. A headline is counted once per window (distinct headline IDs). Trends are relative to the **previous interval's top ten**. Bars scale to the largest current count. The browser requests new JSON every 30 s and highlights changed ranks/counts/new entrants.
+`WordStats::periods()` defines the six periods: 900, 3600, 86400, 604800, 2592000 and 31536000 seconds. `trendingSeconds()` compares adjacent equal-length rolling windows. A headline is counted once per window (distinct headline IDs). Trends are relative to the **previous interval's top ten**. Bars scale to the largest current count. The browser requests new JSON every 30 s and highlights changed ranks/counts/new entrants. Shared `StatsCache` snapshots hold `top` and `rows` for each period; TTLs are 60 s (NOW), 60 s (1 h), 300 s (24 h), 900 s (7 d), 3600 s (30 d), and 21600 s (1 y). Snapshots are stored in `var/cache/` outside the web root with per-period file locks and atomic renames. Ignore-list changes invalidate cached snapshots by fingerprint. Normal scans do not flush long-term snapshots: they refresh when due. If cache storage is unwritable, calculations fall back to uncached results.
 
-Ticker selection uses the 1/24/168-hour rankings. It filters current candidates to 110 characters or fewer, then greedily chooses a top match followed by two diversity-weighted matches, if available. The JS header rotates every ~6.5 seconds and polls every 15 seconds.
+Ticker selection reuses the same cached 1/24/168-hour top-ten rankings (rather than repeatedly counting headline history). It filters current candidates to 110 characters or fewer, then greedily chooses a top match followed by two diversity-weighted matches, if available. The JS header rotates every ~6.5 seconds and polls every 15 seconds.
 
 ## Security and portability
 
