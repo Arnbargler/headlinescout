@@ -114,6 +114,7 @@ php -l src/Ticker.php
 php -l public/index.php
 php tests/word-stats.php
 php tests/ticker.php
+php tests/extraction-limit.php
 ```
 
 ## Why the 1-hour word list can become empty
@@ -153,6 +154,7 @@ php -l public/ticker.php
 php -l public/index.php
 php tests/word-stats.php
 php tests/ticker.php
+php tests/extraction-limit.php
 ```
 
 ## Word count dashboard
