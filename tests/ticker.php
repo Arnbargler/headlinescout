@@ -15,7 +15,8 @@ function check(bool $ok,string $message): void {
 }
 $sourceId=(int)$db->query("SELECT id FROM sources ORDER BY id LIMIT 1")->fetchColumn();
 $db->prepare('DELETE FROM sources WHERE id<>?')->execute([$sourceId]);
-$now=gmdate('c');
+// Keep the fixture inside the rolling window, not on its exclusive end boundary.
+$now=gmdate('c',time()-30);
 $headline=$db->prepare('INSERT INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
 $scan=$db->prepare("INSERT INTO scans(source_id,started_at,finished_at,status,http_status,found,added) VALUES(?,?,?,'success',200,4,4)");
 $appearance=$db->prepare('INSERT INTO appearances(scan_id,headline_id,position) VALUES(?,?,?)');
