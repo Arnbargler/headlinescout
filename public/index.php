@@ -24,13 +24,14 @@ foreach (\HeadlineScout\WordStats::periods() as $period){
 <main class="shell dashboard-page">
 
 <section class="word-stats">
-<div class="word-stats-title"><h2>WORD COUNT</h2><span>Mentions in unique headlines per period · arrows compare with previous matching period</span></div>
+<div class="word-stats-title"><h2>WORD COUNT</h2><span>Click a word to explore matching headlines · arrows compare with previous matching period</span></div>
 <div class="word-stats-grid">
 <?php foreach($wordStats as $period): ?>
 <div class="word-period" data-period="<?=e($period['key'])?>"><h3><?=e($period['label'])?></h3>
 <?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['key']==='hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
 <ol class="word-ranking"><?php foreach($period['rows'] as $entry): ?>
 <li class="word-trend-<?=e($entry['direction'])?>" data-word="<?=e($entry['word'])?>" data-count="<?=(int)$entry['count']?>">
+  <a class="word-detail-link" href="/articles.php?<?=e(http_build_query(['q'=>$entry['word'],'period'=>$period['key']]))?>" aria-label="View headlines containing <?=e($entry['word'])?> from <?=e($period['label'])?>" title="View matching <?=e($period['label'])?> headlines"></a>
   <span class="word-label"><?=e($entry['word'])?></span>
   <span class="word-bar" aria-hidden="true"><span class="word-bar-fill" style="width:<?=e($entry['percent'])?>%"></span></span>
   <strong class="word-total"><?=(int)$entry['count']?></strong>
