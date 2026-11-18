@@ -100,7 +100,12 @@ SQL);
      * NEW means absent from the previous window's top ten, not all history.
      */
     public static function trendingSeconds(PDO $db, int $span, array $ignored, int $limit=10): array {
-        $now=time();
+        return self::snapshot($db,$span,$ignored,null,$limit)['rows'];
+    }
+
+    /** Calculate the current top words and its relative trend rows together. */
+    public static function snapshot(PDO $db,int $span,array $ignored,?int $at=null,int $limit=10): array {
+        $now=$at??time();
         $current=array_slice(self::counts($db,$ignored,$now-$span,$now),0,$limit,true);
         $previous=array_slice(self::counts($db,$ignored,$now-2*$span,$now-$span),0,$limit,true);
         $max=$current ? max($current) : 0;
@@ -116,7 +121,7 @@ SQL);
                 'percent'=>$max>0 ? round(100*$mentions/$max,1) : 0
             ];
         }
-        return $rows;
+        return ['top'=>$current,'rows'=>$rows];
     }
 
     /** Tokenization shared by frequency analysis and ticker ranking. */
