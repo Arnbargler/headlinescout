@@ -176,6 +176,8 @@ SQL);
      */
     public static function firstSentence(string $title): string {
         $title=trim(preg_replace('/\s+/u',' ',$title));
+        // Google News can expose its trailing Material icon name as link text.
+        $title=trim(preg_replace('/(?:\s+chevron_right)+\s*$/iu','',$title));
         preg_match_all('/[.!?]+[”"’\x{0027}]?(?=\s+[\p{Lu}\p{N}"“‘])/u',
             $title,$boundaries,PREG_OFFSET_CAPTURE);
         foreach ($boundaries[0] as [$punctuation,$offset]) {
