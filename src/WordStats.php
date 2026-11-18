@@ -52,23 +52,60 @@ final class WordStats {
     }
 
     /**
-     * Counts occurrences of each word in unique stored headline titles last seen
-     * inside rolling UTC intervals. One headline is counted once, not once per scan.
-     * Ignored multiword phrases are removed before individual word counting.
+     * Headline mentions in a half-open time window: [start,end).
+     * Read historical appearances (not the mutable last_seen_at), so a scan
+     * tomorrow cannot erase evidence from yesterday's comparison window.
+     * The same headline is counted only once within each window.
      */
-    public static function top(PDO $db, int $hours, array $ignored, int $limit=10): array {
-        $cutoff=gmdate('c',time()-$hours*3600);
-        $stmt=$db->prepare('SELECT title FROM headlines WHERE last_seen_at >= ?');
-        $stmt->execute([$cutoff]);
+    public static function counts(PDO $db, array $ignored, int $start, int $end): array {
+        if ($end <= $start) return [];
+        $stmt=$db->prepare(<<<'SQL'
+SELECT DISTINCT h.id, h.title
+FROM scans s
+JOIN appearances a ON a.scan_id=s.id
+JOIN headlines h ON h.id=a.headline_id
+WHERE s.status='success' AND s.started_at >= ? AND s.started_at < ?
+SQL);
+        $stmt->execute([gmdate('c',$start),gmdate('c',$end)]);
         $counts=[];
-        while ($row=$stmt->fetch()) {
-            foreach (self::tokens($row['title'], $ignored) as $word) {
+        while($row=$stmt->fetch()){
+            foreach(self::tokens($row['title'],$ignored) as $word) {
                 $counts[$word]=($counts[$word]??0)+1;
             }
         }
         uksort($counts,'strnatcasecmp');
-        arsort($counts,SORT_NUMERIC); // stable tie ordering (alphabetical pre-sort)
-        return array_slice($counts,0,$limit,true);
+        arsort($counts,SORT_NUMERIC);
+        return $counts;
+    }
+
+    public static function top(PDO $db, int $hours, array $ignored, int $limit=10): array {
+        $now=time();
+        return array_slice(self::counts($db,$ignored,$now-$hours*3600,$now),0,$limit,true);
+    }
+
+    /**
+     * Compare the current top 10 to the top 10 from the immediately prior,
+     * equally sized interval. "new" means absent from the previous TOP TEN,
+     * not necessarily absent from all previous headlines.
+     */
+    public static function trending(PDO $db, int $hours, array $ignored, int $limit=10): array {
+        $now=time();$span=$hours*3600;
+        $current=array_slice(self::counts($db,$ignored,$now-$span,$now),0,$limit,true);
+        $previous=array_slice(self::counts($db,$ignored,$now-2*$span,$now-$span),0,$limit,true);
+        $max=$current ? max($current) : 0;
+        $rows=[];
+        foreach($current as $word=>$mentions){
+            $prior=$previous[$word]??null;
+            $direction=$prior===null ? 'new' : ($mentions>$prior ? 'up' : ($mentions<$prior ? 'down' : 'flat'));
+            $rows[]=[
+                'word'=>(string)$word,
+                'count'=>$mentions,
+                'previous'=>$prior,
+                'direction'=>$direction,
+                'percent'=>$max>0 ? round(100*$mentions/$max,1) : 0
+            ];
+        }
+        return $rows;
     }
 
     /** Tokenization shared by frequency analysis and ticker ranking. */
