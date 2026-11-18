@@ -75,8 +75,7 @@ SQL;
         }
         return array_map(static fn($row)=>[
             'title'=>$row['title'],
-            'url'=>$row['url'],
-            'matches'=>$row['matches']
+            'url'=>$row['url']
         ],$selected);
     }
 }
