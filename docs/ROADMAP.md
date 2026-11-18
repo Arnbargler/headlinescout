@@ -1,5 +1,15 @@
 # Roadmap
 
+## Hourly word counts and scan freshness
+
+- [x] Include unique headlines last observed in each rolling window, not only newly discovered headlines
+- [x] Keep at most one count per headline per time window despite repeated scans
+- [x] Warn on empty hourly count when successful collection is over an hour old
+- [x] Update in-memory regression fixture for old headline seen again recently
+- [ ] Confirm cron is installed and running on Colossus
+- [ ] Run word-stats regression test and verify live hour counts
+
+
 ## Live headline ticker iteration
 
 - [x] Score current top-ten front-page headlines per source by number of matching top-word occurrences
