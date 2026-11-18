@@ -13,7 +13,7 @@ This file tracks **forward-looking work only**; implemented behaviour is documen
 ## Recommended next improvements
 
 1. **Protect current headlines from empty scans.** A successful HTTP fetch with zero extracted articles can currently be recorded as a successful empty scan. Decide on an error/validation policy that won't misclassify legitimate empty pages before altering ingestion.
-2. **Measure historical-analysis performance.** Six dashboard windows plus ticker word rankings query historical appearances on each request/poll. With months or years of data, benchmark SQLite queries and consider indexed materialization/caching, rather than prematurely introducing a new stack.
+2. **Monitor long-term cold-cache performance.** Six Dashboard windows and the ticker now share TTL-based snapshots, avoiding repeated full historical queries on browser polls. Benchmark misses/hits with `php bin/benchmark-stats.php` as months of data accumulate. Consider daily aggregation only when the cold-refresh time justifies it.
 3. **Watch live scan health.** Add a compact freshness/failed-source indicator if the Dashboard needs it; avoid restoring the discarded summary-card layout by default.
 4. **Add new analysis modules.** Dashboard now has room for richer statistics; define each report and its data contract before adding code.
 5. **Consider a History page.** Current Articles intentionally shows the latest five per source only. Keep the historical records available for future browsing/reporting.
