@@ -11,7 +11,7 @@ Three ordinary PHP pages share `public/_chrome.php`: brand, upward-rotating Top 
 | Tab | URL | Purpose |
 |---|---|---|
 | Dashboard | `/` | Six Word Count Top 10 panels, trend bars and flashes |
-| Articles | `/articles.php` | Latest **five** headlines per source; source/text/top-word filters |
+| Articles | `/articles.php` | Latest **three** headlines per source; source/text/top-word filters |
 | Settings | `/settings.php` | Test extraction, manage/scan sources, edit ignored words and phrases |
 
 `/lab.php` is deliberately kept as an older working Settings URL.
@@ -22,7 +22,7 @@ Three ordinary PHP pages share `public/_chrome.php`: brand, upward-rotating Top 
 |---|---|---|
 | 7 days | 30 days | 1 year |
 
-Every panel compares its rolling window with the immediately preceding equal-sized window: 15 min, 1 hour, 24 hours, 7 days, 30 days and **365 days** respectively. Only the first five appearances per successful scan are considered; a headline repeated within the same period counts once. Each panel shows up to ten words, mention counts, relative-length bars and trend direction versus the preceding period's **top ten**. NEW means absent from that previous top ten, *not necessarily historically new*. Word/phrase ignores apply throughout.
+Every panel compares its rolling window with the immediately preceding equal-sized window: 15 min, 1 hour, 24 hours, 7 days, 30 days and **365 days** respectively. Only the first three appearances per successful scan are considered; a headline repeated within the same period counts once. Each panel shows up to ten words, mention counts, relative-length bars and trend direction versus the preceding period's **top ten**. NEW means absent from that previous top ten, *not necessarily historically new*. Word/phrase ignores apply throughout.
 
 Bar colors: green ↑, pink ↓, orange NEW, blue →. The Dashboard polls `/word-stats.php` every 30 seconds while visible; entered, moved, or count-changed words flash briefly in cyan. Reduced-motion preferences are honored.
 
@@ -34,7 +34,7 @@ Dashboard, ticker, and the Articles top-word filter now reuse the **same per-per
 
 | Period | Refresh after |
 |---|---|
-| NOW (15 minutes) | 60 seconds |
+| NOW (15 minutes) | 30 seconds |
 | 1 hour | 60 seconds |
 | 24 hours | 5 minutes |
 | 7 days | 15 minutes |
@@ -70,7 +70,7 @@ The desired Colossus cron cadence is **every 30 seconds** (two standard minute e
 
 **Git does not install cron entries.** Confirm with `crontab -l` on Colossus. `var/scan.lock` avoids concurrent scheduled and manual scans. Three slow sites may take longer than 30 seconds; skipped overlapping invocations are expected.
 
-Source fetching uses cURL, public-host checks, robots.txt checks, bounded redirects, timeouts and download-size limits. XPath extraction keeps at most five qualifying same-site headlines for each collection scan, while Settings previews more candidates for method selection. Headline titles are cleaned to the first likely sentence; trailing Google News `chevron_right` is removed. Existing article URLs and historical appearances are retained.
+Source fetching uses cURL, public-host checks, robots.txt checks, bounded redirects, timeouts and download-size limits. XPath extraction keeps at most three qualifying same-site headlines for each collection scan, while Settings previews more candidates for method selection. Headline titles are cleaned to the first likely sentence; trailing Google News `chevron_right` is removed. Existing article URLs and historical appearances are retained.
 
 Reloading pages does **not** trigger website scraping.
 
