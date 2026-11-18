@@ -12,7 +12,7 @@ try {
     foreach (\HeadlineScout\WordStats::periods() as $period) {
         $periods[]=[
             'key'=>$period['key'],
-            'rows'=>\HeadlineScout\WordStats::trendingSeconds($db,$period['seconds'],$ignored)
+            'rows'=>\HeadlineScout\StatsCache::period($db,$period['key'],$ignored)['rows']
         ];
     }
     echo json_encode(['periods'=>$periods],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
