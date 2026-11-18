@@ -169,6 +169,26 @@ SQL);
         } catch (Throwable) { return false; }
     }
 
+    /**
+     * Keep only the first sentence of a headline. Only split at sentence-ending
+     * punctuation followed by whitespace and the start of another sentence.
+     * Protect common abbreviated titles and initialisms (Dr., U.S., etc.).
+     */
+    public static function firstSentence(string $title): string {
+        $title=trim(preg_replace('/\s+/u',' ',$title));
+        preg_match_all('/[.!?]+[”"’\x{0027}]?(?=\s+[\p{Lu}\p{N}"“‘])/u',
+            $title,$boundaries,PREG_OFFSET_CAPTURE);
+        foreach ($boundaries[0] as [$punctuation,$offset]) {
+            $preceding=substr($title,0,$offset+strlen($punctuation));
+            if (str_starts_with($punctuation,'.') &&
+                preg_match('/(?:\b(?:Mr|Mrs|Ms|Dr|Prof|Sen|Rep|Gov|Gen|St|Jr|Sr|vs|etc)\.|(?:\b\p{L}\.){2,})[”"’\x{0027}]?$/iu',$preceding)) {
+                continue;
+            }
+            return trim($preceding);
+        }
+        return $title;
+    }
+
     public static function extract(string $html, string $url, string $selector, int $limit=120): array {
         $dom = new DOMDocument();
         $prior = libxml_use_internal_errors(true);
@@ -188,7 +208,7 @@ SQL);
             if ($host !== $basehost && !str_ends_with($host, '.' . $basehost)) continue;
             $path = $parts['path'] ?? '/';
             if ($path === '/' || preg_match('~^/(?:tag|tags|category|categories|author|authors|about|contact|search|videos|live|newsletter|subscribe)(?:/|$)~i',$path)) continue;
-            $title = trim(preg_replace('/\s+/u', ' ', $node->textContent));
+            $title = self::firstSentence($node->textContent);
             if (mb_strlen($title) < 18 || mb_strlen($title) > 300) continue;
             $link = preg_replace('/#.*$/','',$link);
             if (!isset($out[$link])) $out[$link] = ['url'=>$link,'title'=>$title];
