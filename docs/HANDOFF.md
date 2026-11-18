@@ -8,15 +8,15 @@ Personal LAN news headline monitor built for experimentation and long-term word-
 
 ## Current product
 
-- **Dashboard** `/`: six Word Count Top 10 panels, arranged NOW/1h/24h above 7d/30d/1y. Trend bars green(up)/pink(down)/orange(NEW)/blue(flat), count, arrow, 30-second JSON polling, cyan flash for new/moved/count-changed word rows.
-- **Articles** `/articles.php`: at most three latest successful homepage headlines per enabled source with source chooser, title substring search and optional top-word-only filter. Last successful source scan shown.
+- **Dashboard** `/`: clickable Word Count rows linking to Articles historical term/period searches, plus six Top 10 panels arranged NOW/1h/24h above 7d/30d/1y. Trend bars green(up)/pink(down)/orange(NEW)/blue(flat), count, arrow, 30-second JSON polling, cyan flash for new/moved/count-changed word rows.
+- **Articles** `/articles.php`: default mode shows at most three latest successful homepage headlines per enabled source with source chooser, title substring search and optional top-word-only filter. Historical mode (`?q=word&period=now|hour|day|week|month|year`) searches successful scan appearances from the chosen rolling window, positions 1–3, whole-word title match, deduplicated headlines, 100 per page, source filtering. Last successful source scan shown.
 - **Settings** `/settings.php` with alias `/lab.php`: try six XPath strategies, save source/selector, scan now with shared lock, permanently remove source/history, maintain ignored words/phrases.
 - **Shared header** `public/_chrome.php`: brand, three navigation tabs and an upward rotating (about every 6.5 s) selection of up to three clickable headlines without source labels. >110-character titles ineligible. Select first by matching trending words; reward previously uncovered trending terms ×3 for subsequent picks. Poll every 15 s.
 - **Scanner**: `bin/scan.php` sorts due sources by next-due timestamp using `src/Scheduler.php`, at most three per run; `--all` scans all. Per-source default minimum interval 900 seconds (15 min). Colossus target scheduler cadence is 30 seconds using two cron entries (one `sleep 30`). Shared `var/scan.lock` prevents overlap. Each successful scan preserves at most three homepage link appearances and maintains historic data. Current title cleanup strips additional sentences and `chevron_right`.
 
 ## File ownership
 
-See `docs/ARCHITECTURE.md` for full map. Main work areas: `src/App.php` (fetch/extract/ingest), `src/SourceLab.php` (selector preview), `src/WordStats.php` (window calculations, ignores, tokens), `src/Ticker.php` (diversity ranking), `src/Scheduler.php` (scan ordering), `public/index.php` (Dashboard), `public/articles.php` (feed), `public/lab.php` (Settings), `public/_chrome.php` (shared chrome), `public/style.css`, `public/ticker.js` and `public/word-stats.js`. Both AJAX endpoints are read-only.
+See `docs/ARCHITECTURE.md` for full map. Main work areas: `src/App.php` (fetch/extract/ingest), `src/SourceLab.php` (selector preview), `src/WordStats.php` (window calculations, ignores, tokens), `src/ArticleSearch.php` (historical term/time drilldowns), `src/Ticker.php` (diversity ranking), `src/Scheduler.php` (scan ordering), `public/index.php` (Dashboard), `public/articles.php` (feed), `public/lab.php` (Settings), `public/_chrome.php` (shared chrome), `public/style.css`, `public/ticker.js` and `public/word-stats.js`. Both AJAX endpoints are read-only.
 
 Schema: `sources`, `headlines`, `scans`, `appearances`, `ignored_terms`, `settings`. Historical appearances underpin the 30-day and 365-day comparisons, so preserving the SQLite DB matters.
 
@@ -45,7 +45,7 @@ crontab -l
 tail -n 20 var/cron.log
 ```
 
-Open Dashboard/Articles/Settings; ensure pages load, ticker rotates and no console errors. Verify six windows, live word highlights, source search/filter, Settings test/source scans. For CSS/JS, hard-refresh (Ctrl+Shift+R). The tests rely on in-memory SQLite and have **not been run by this handoff author on Colossus**.
+Open Dashboard/Articles/Settings; ensure pages load, ticker rotates and no console errors. Click words in several Dashboard periods and confirm the matching historical search, period selection, source selector and hover/focus treatment. Test `php tests/article-search.php`. Verify six windows, live word highlights, source search/filter, Settings test/source scans. For CSS/JS, hard-refresh (Ctrl+Shift+R). The tests rely on in-memory SQLite and have **not been run by this handoff author on Colossus**.
 
 The expected Colossus cron lines are listed in README. Git commits do not install/alter system cron jobs. A slow scan may consume more than 30 seconds; the next tick can skip safely due to the lock.
 
