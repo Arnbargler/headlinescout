@@ -50,3 +50,7 @@ Selector representation (CSS selector translated to XPath vs XPath only), dashbo
 ## Trend comparison implementation
 
 The collector records five appearances per successful scan (previous older scans may contain more). Word statistics query historical `scans` and `appearances`, restricting positions to 1–5 for consistency and deduplicating headline IDs separately within each rolling interval. This supports comparisons to the immediately preceding equal-length interval without relying on mutable `headlines.last_seen_at`. The current top ten are compared against the prior interval's top ten; absent prior top-ten membership displays `NEW`.
+
+## Shared page chrome (implemented)
+
+`public/_chrome.php` renders the HeadlineScout logo, live top-three ticker and Dashboard / Articles / Settings tab navigation for all three pages. Each page initializes its own database connection and sets `$activeTab` before including this component. `public/ticker.js` runs on every tab, polling `/ticker.php` every 15 seconds. `public/articles.php` owns current-page feed filters. `public/index.php` owns Word Count analytics. `public/settings.php` currently includes `public/lab.php`, preserving both URLs and settings POST handling without duplicating functionality. Tabs are ordinary links, not a SPA; shared chrome is visually consistent across page loads.
