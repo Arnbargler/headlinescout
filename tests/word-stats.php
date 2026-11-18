@@ -28,7 +28,7 @@ $add=function (int $minutesAgo,array $titles) use ($db,$source,$now,$insertHeadl
         $insertAppearance->execute([$scanId,$headlineIds[$title],$position+1]);
     }
 };
-$add(30,['Rocket market rocket launch','Market economy market','Drone economy','Tech progress']);
+$add(30,['Rocket market rocket launch','Market economy market','Drone economy','Tech progress','Fourthplace noise']);
 $add(30,['Tech progress']); // prior fourth-place item is now retained via a separate top-three scan
 $add(15,['Rocket market rocket launch']); // same headline in second scan, counts only once
 $add(90,['Rocket rocket drone','Market drone','Tech progress previous']);
@@ -45,6 +45,7 @@ verify(($current['market']??0)===3,'Current hour counts 3 market occurrences wit
 verify(($current['rocket']??0)===1,'Ignore phrase removes rocket launch but keeps standalone rocket');
 verify(($previous['rocket']??0)===2,'Previous hour remains accessible after a more recent scan');
 verify(($current['economy']??0)===2,'Current hour counts economy');
+verify(!isset($current['fourthplace']),'Current rankings exclude appearances beyond position three, including historical scans');
 $rows=WordStats::trendingSeconds($db,3600,$ignore);
 $byWord=array_column($rows,null,'word');
 verify($byWord['market']['direction']==='up','Market trends up vs preceding hour');
