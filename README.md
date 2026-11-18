@@ -155,25 +155,16 @@ If the personal crontab is empty, run `crontab -e` and add this entry for the kn
 
 The one-minute cron tick only scans a source when its own configured 15-minute interval has elapsed. To immediately refresh all enabled sources, run `php bin/scan.php --all`. A successful scan updates each headline's `last_seen_at`; the word counts then include each distinct headline once per time window.
 
-## Top three headline ticker
+## Top three headline rotator
 
-A narrow marquee directly below the dashboard header scrolls **up to three headlines right to left on one line**. It chooses from the most recent successful scan for each enabled source (maximum 5 candidate headlines per source). For each candidate headline, it counts occurrences of words currently appearing in the union of the 1-hour, 24-hour and 7-day Top 10 Word Count lists. The first headline has the highest number of top-word mentions. The second and third are chosen in sequence: matches on top words not yet represented in earlier ticker headlines count **3 points** each, while already represented words count **1 point** each. Ties favour the original total match count, then front-page position and newer scan. This greedy diversity rule favours new topics without excluding strong related stories. Ignored words and phrases are excluded using the same tokenization as the word counts. It is independent of the dashboard's source, search and word-count checkbox filters.
+The shared page header shows **one large headline at a time**, rotating upward through **up to three** distinct headlines roughly every 6.5 seconds. The titles are clickable, but no source name is displayed. Only titles of **110 Unicode characters or fewer** are eligible, and eligibility is checked before ranking.
 
-Each scrolling headline links to the original article and includes its source name. Hover over the ticker to pause it. If fewer than three headlines contain qualifying words, fewer are shown; when none qualify, an explanatory message appears instead.
+The first title is the strongest top-word match. The next two are chosen greedily with triple weight given to trending words not represented by previously selected titles. The algorithm reads at most five current headlines per enabled source. The word counts, Articles page and stored scan data remain unchanged by the length limit.
 
-The initial ticker renders on each dashboard request. A small read-only `/ticker.php` JSON endpoint is polled by `/ticker.js` **every 15 seconds** while the page is visible, so manual or scheduled source scans can change the ticker without a full browser refresh. The animation only restarts when the ranked headlines change. A reduced-motion preference disables automatic scrolling.
+The rotator is rendered on all three tabs by `public/_chrome.php`; `public/ticker.js` checks `/ticker.php` for a revised selection every 15 seconds without a full-page refresh. It pauses on mouse hover, keyboard focus and when the browser tab is hidden; reduced-motion preferences show a stationary headline.
 
-Test after updating Colossus:
+Run `php tests/ticker.php` after pulling to verify that overlong titles are excluded and the selection remains diverse.
 
-```bash
-php -l src/WordStats.php
-php -l src/Ticker.php
-php -l public/ticker.php
-php -l public/index.php
-php tests/word-stats.php
-php tests/ticker.php
-php tests/extraction-limit.php
-```
 
 ## Word count dashboard
 
