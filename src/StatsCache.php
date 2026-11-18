@@ -28,6 +28,17 @@ final class StatsCache {
         }
         $span=$periods[$key]['seconds'];
         $ttl=self::TTL[$key];
+
+        // Tests and embedded callers commonly use sqlite::memory:. Never let
+        // their synthetic data overwrite/read the production on-disk cache.
+        // An explicit directory is the opt-in for isolated cache tests.
+        if ($directory===null) {
+            $databases=$db->query('PRAGMA database_list')->fetchAll(PDO::FETCH_ASSOC);
+            $main=array_values(array_filter($databases,static fn(array $entry): bool => $entry['name']==='main'));
+            if (!$main || ($main[0]['file']??'')==='') {
+                return self::calculate($db,$span,$ignored,$ttl,'memory');
+            }
+        }
         $hash=hash('sha256',json_encode(array_column($ignored,'term'),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
         $directory ??= dirname(__DIR__).'/var/cache';
         $file=$directory.'/word-'.$key.'.json';
