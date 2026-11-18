@@ -83,22 +83,17 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .header-button svg{flex-shrink:0}
 @media(max-width:600px){.site-title{font-size:23px}.header-button{padding:8px 11px}}
 
-/* Live top-three headline ticker */
+/* Three large headlines rotating upward, one at a time */
 .ticker-bar{border-bottom:1px solid var(--line);background:#0b1725}
-.ticker-shell{display:flex;align-items:center;gap:16px;min-height:42px}
-.ticker-caption{flex:0 0 auto;color:var(--accent);font-size:11px;letter-spacing:.12em;font-weight:800;white-space:nowrap}
-.ticker-viewport{overflow:hidden;flex:1;min-width:0;white-space:nowrap;mask-image:linear-gradient(to right,transparent,#000 2%,#000 98%,transparent)}
-.ticker-track{display:flex;align-items:center;gap:56px;min-height:42px;width:max-content}
-.ticker-scroll{padding-left:100%;animation:ticker-move 48s linear infinite}
-.ticker-viewport:hover .ticker-scroll,.ticker-viewport:focus-within .ticker-scroll{animation-play-state:paused}
-.ticker-story{flex:none;color:var(--text);font-size:13px;text-decoration:none}
-.ticker-story strong{color:var(--accent)}
-.ticker-story:hover{text-decoration:underline;color:var(--accent)}
-.ticker-empty{color:var(--muted);font-size:13px}
-@keyframes ticker-move{from{transform:translateX(0)}to{transform:translateX(-100%)}}
-@media(max-width:600px){.ticker-shell{gap:9px}.ticker-caption{font-size:10px}.ticker-story{font-size:12px}}
-@media(prefers-reduced-motion:reduce){.ticker-scroll{animation:none;padding-left:0}.ticker-viewport{overflow-x:auto;mask-image:none}.ticker-track{width:max-content}}
-
+.ticker-shell{display:flex;align-items:center;gap:20px;min-height:104px}
+.ticker-caption{flex:0 0 116px;color:var(--accent);font-size:11px;letter-spacing:.12em;font-weight:800;line-height:1.4}
+.ticker-viewport{height:104px;min-width:0;overflow:hidden;flex:1}
+.ticker-track{display:flex;flex-direction:column;align-items:stretch;transform:translateY(0);will-change:transform}
+.ticker-story{flex:0 0 104px;min-height:104px;display:flex;align-items:center;min-width:0;overflow:hidden;color:var(--text);font-size:clamp(19px,2.1vw,26px);font-weight:650;line-height:1.22;text-decoration:none}
+.ticker-story:hover{color:var(--accent)}
+.ticker-empty{display:flex;align-items:center;height:104px;color:var(--muted);font-size:15px}
+@media(max-width:600px){.ticker-shell{gap:12px;min-height:100px}.ticker-caption{flex-basis:70px;font-size:10px}.ticker-viewport{height:100px}.ticker-story{flex-basis:100px;min-height:100px;font-size:19px}.ticker-empty{height:100px;font-size:13px}}
+@media(prefers-reduced-motion:reduce){.ticker-track{will-change:auto}}
 
 /* Word-count comparisons: relative bars and compact directional markers */
 .word-ranking li{gap:8px;align-items:center;min-height:35px}
