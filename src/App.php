@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS scans_source ON scans(source_id,started_at DESC);
 CREATE INDEX IF NOT EXISTS scans_time_status ON scans(started_at,status);
 SQL);
         require_once __DIR__ . '/WordStats.php';
+        require_once __DIR__ . '/StatsCache.php';
         WordStats::install($db);
         // Seed defaults only on the first initialization; never resurrect deleted sources.
         // Existing installations already have sources and simply acquire the seed marker.
