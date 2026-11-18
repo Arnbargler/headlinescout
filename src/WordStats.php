@@ -100,10 +100,6 @@ SQL);
      * equally sized interval. "new" means absent from the previous TOP TEN,
      * not necessarily absent from all previous headlines.
      */
-    public static function trending(PDO $db, int $hours, array $ignored, int $limit=10): array {
-        return self::trendingSeconds($db,$hours*3600,$ignored,$limit);
-    }
-
     /** Each column compares a rolling window with the immediately previous equal window. */
     public static function trendingSeconds(PDO $db, int $span, array $ignored, int $limit=10): array {
         $now=time();
