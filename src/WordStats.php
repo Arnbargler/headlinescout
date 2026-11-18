@@ -83,13 +83,30 @@ SQL);
         return array_slice(self::counts($db,$ignored,$now-$hours*3600,$now),0,$limit,true);
     }
 
+    /** Rolling windows, in dashboard display order. One year is exactly 365 days. */
+    public static function periods(): array {
+        return [
+            ['key'=>'now', 'label'=>'NOW', 'seconds'=>15*60],
+            ['key'=>'hour', 'label'=>'1 hour', 'seconds'=>3600],
+            ['key'=>'day', 'label'=>'24 hours', 'seconds'=>24*3600],
+            ['key'=>'week', 'label'=>'7 days', 'seconds'=>7*24*3600],
+            ['key'=>'month', 'label'=>'30 days', 'seconds'=>30*24*3600],
+            ['key'=>'year', 'label'=>'1 year', 'seconds'=>365*24*3600],
+        ];
+    }
+
     /**
      * Compare the current top 10 to the top 10 from the immediately prior,
      * equally sized interval. "new" means absent from the previous TOP TEN,
      * not necessarily absent from all previous headlines.
      */
     public static function trending(PDO $db, int $hours, array $ignored, int $limit=10): array {
-        $now=time();$span=$hours*3600;
+        return self::trendingSeconds($db,$hours*3600,$ignored,$limit);
+    }
+
+    /** Each column compares a rolling window with the immediately previous equal window. */
+    public static function trendingSeconds(PDO $db, int $span, array $ignored, int $limit=10): array {
+        $now=time();
         $current=array_slice(self::counts($db,$ignored,$now-$span,$now),0,$limit,true);
         $previous=array_slice(self::counts($db,$ignored,$now-2*$span,$now-$span),0,$limit,true);
         $max=$current ? max($current) : 0;
