@@ -25,6 +25,9 @@ $cases=[
     ['U.S. President announces sweeping policy. Critics respond.','U.S. President announces sweeping policy.'],
     ['A single sentence with no trailing punctuation','A single sentence with no trailing punctuation'],
     ['An urgent statement! Details will follow.','An urgent statement!'],
+    ['Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race chevron_right','Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race'],
+    ['A valid headline about the economy chevron_right chevron_right','A valid headline about the economy'],
+    ['A headline about chevron_right icon rendering','A headline about chevron_right icon rendering'],
 ];
 foreach($cases as [$title,$expected]) {
     if(App::firstSentence($title)!==$expected) {
@@ -39,4 +42,10 @@ if(count($extracted)!==1 || $extracted[0]['title']!=='Headline begins with the c
     exit(1);
 }
 
-echo "PASS: extraction limits and first-sentence headline cleanup\n";
+$google='<h2><a href="/news/google-story">Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race chevron_right</a></h2>';
+$googleResult=App::extract('<html><body>'.$google.'</body></html>','https://example.org/',$selector);
+if(count($googleResult)!==1 || $googleResult[0]['title']!=='Mary Peltola defeats Republican Dan Sullivan in Alaska Senate race') {
+    fwrite(STDERR,"FAIL: Google News chevron icon should not be stored\\n");
+    exit(1);
+}
+echo "PASS: extraction limits, sentence cleanup and chevron icon removal\\n";
