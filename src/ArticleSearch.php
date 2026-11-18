@@ -23,6 +23,8 @@ final class ArticleSearch {
         // Exact word boundaries match the headline tokenizer more closely than
         // substring matching ("war" should not match "award").
         $pattern='/(?<![\p{L}\p{N}])'.preg_quote($term,'/').'(?![\p{L}\p{N}])/iu';
+        $singleWord=!preg_match('/\s/u',$term);
+        $normalized=mb_strtolower($term,'UTF-8');
         $stmt=$db->prepare(<<<'SQL'
 SELECT h.id,h.source_id,h.title,h.url,h.first_seen_at,
        MAX(sc.started_at) AS matched_at,MIN(a.position) AS position
@@ -41,7 +43,13 @@ SQL);
         $skip=($page-1)*self::PAGE_SIZE;
         $items=[];$seen=0;
         while ($row=$stmt->fetch(PDO::FETCH_ASSOC)) {
-            if (!preg_match($pattern,$row['title'])) continue;
+            if ($singleWord) {
+                // Match exactly the same token boundaries as Word Count,
+                // including hyphenated words and apostrophes.
+                if (!in_array($normalized,WordStats::tokens($row['title'],[]),true)) continue;
+            } elseif (!preg_match($pattern,$row['title'])) {
+                continue;
+            }
             if ($seen++<$skip) continue;
             if (count($items)===self::PAGE_SIZE) break;
             $items[]=$row;
