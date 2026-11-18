@@ -113,3 +113,13 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .direction-flat{color:#8fa7bd}
 .direction-new{font-size:10px;letter-spacing:.02em;color:#e9bd68;border:1px solid #77623a;border-radius:4px;line-height:20px}
 @media(max-width:420px){.word-ranking .word-label{flex-basis:68px}.word-direction{flex-basis:29px}}
+
+/* Shared site tabs beneath the persistent header and headline ticker */
+.section-tabs{background:#101b29;border-bottom:1px solid var(--line)}
+.section-tabs-inner{display:flex;align-items:stretch;gap:6px}
+.section-tab{display:inline-flex;align-items:center;justify-content:center;padding:13px 18px 12px;border-bottom:3px solid transparent;text-decoration:none;color:var(--muted);font-size:14px;font-weight:650;transition:background .15s ease,color .15s ease}
+.section-tab:hover{color:var(--text);background:#17273a}
+.section-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:#17273a}
+.articles-page{padding-top:24px}
+.dashboard-page{padding-bottom:16px}
+@media(max-width:520px){.section-tabs-inner{gap:0}.section-tab{flex:1;padding:11px 8px;font-size:13px}}
