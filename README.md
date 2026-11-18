@@ -11,7 +11,7 @@ Three ordinary PHP pages share `public/_chrome.php`: brand, upward-rotating Top 
 | Tab | URL | Purpose |
 |---|---|---|
 | Dashboard | `/` | Six Word Count Top 10 panels, trend bars and flashes |
-| Articles | `/articles.php` | Latest **three** headlines per source; source/text/top-word filters |
+| Articles | `/articles.php` | Latest **three** headlines per source, or historical headline search by term and period; source/text/top-word filters |
 | Settings | `/settings.php` | Test extraction, manage/scan sources, edit ignored words and phrases |
 
 `/lab.php` is deliberately kept as an older working Settings URL.
@@ -23,6 +23,8 @@ Three ordinary PHP pages share `public/_chrome.php`: brand, upward-rotating Top 
 | 7 days | 30 days | 1 year |
 
 Every panel compares its rolling window with the immediately preceding equal-sized window: 15 min, 1 hour, 24 hours, 7 days, 30 days and **365 days** respectively. Only the first three appearances per successful scan are considered; a headline repeated within the same period counts once. Each panel shows up to ten words, mention counts, relative-length bars and trend direction versus the preceding period's **top ten**. NEW means absent from that previous top ten, *not necessarily historically new*. Word/phrase ignores apply throughout.
+
+**Word Count drill-down:** Every displayed word row is a clickable, hover- and keyboard-highlighted link to `/articles.php?q=<word>&period=<key>`. The destination selects the matching six-period time window and searches historically recorded top-three headline appearances, not only today's current front page. Live-rebuilt rows retain these links. A historical headline is listed once even if it appeared in several scans. Articles allows additional source filtering and browsing 100 matches per page. The default Articles page still shows latest current front pages; choose a time range to search collected history. Historical searches find whole words/phrases (rather than substrings); records outside the selected window or below rank three do not qualify. A search result uses the current stored headline title, which may have been updated by a subsequent scan.
 
 Bar colors: green ↑, pink ↓, orange NEW, blue →. The Dashboard polls `/word-stats.php` every 30 seconds while visible; entered, moved, or count-changed words flash briefly in cyan. Reduced-motion preferences are honored.
 
