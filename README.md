@@ -43,9 +43,9 @@ Dashboard, ticker, and the Articles top-word filter now reuse the **same per-per
 | 30 days | 1 hour |
 | 1 year | 6 hours |
 
-Snapshots live under `var/cache/word-{period}.json` (outside `public/`), with per-period `.lock` files for concurrency control. This directory needs to be writable by both the CLI user and the PHP web-server user, **if those are different**. On shared hosting, make `var/cache/` writable to PHP; no Redis, extra cron jobs, or separate cache service required. Ignore-list changes invalidate snapshots automatically; newly scanned headlines enter each comparison **on that period's next refresh**, not instantly. Clients still poll at the same 30-second (Dashboard) and 15-second (ticker) cadence.
+Snapshots live under `var/cache/word-{period}.json` (outside `public/`), with per-period `.lock` files for concurrency control. This directory needs to be writable by both the CLI user and the PHP web-server user, **if those are different**. On shared hosting, make `var/cache/` writable to PHP; no Redis, extra cron jobs, or separate cache service required. Ignore-list changes invalidate snapshots automatically. **A new successful scan also invalidates every period immediately**, including the 1-year panel, so different cache ages do not make a 7-day count exceed the 1-year count. Between scans, each period retains its independent maximum-age refresh. Clients still poll at the same 30-second (Dashboard) and 15-second (ticker) cadence.
 
-When a snapshot expires, one request rebuilds it while other requests can keep serving the prior snapshot. If the cache directory isn't writable, calculations still work but may be slower (uncached). Initial requests for long periods may take longer than warm reads.
+When a snapshot expires by time, one request rebuilds it while other requests can keep serving the prior snapshot. When a new scan changes the stored revision, requests do not reuse earlier-revision snapshots. If the cache directory isn't writable, calculations still work but may be slower (uncached). Initial requests for long periods may take longer than warm reads.
 
 **Benchmark on Colossus** (uses the existing database but writes test cache files only in a temporary directory):
 
