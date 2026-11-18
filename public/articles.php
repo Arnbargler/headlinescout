@@ -12,7 +12,7 @@ $periods=\HeadlineScout\ArticleSearch::periods();
 $period=(string)($_GET['period']??'');
 if (!isset($periods[$period])) $period='';
 $historical=$period!=='';
-$defaultFeed=!$historical && $q==='';
+$defaultFeed=!$historical && $q==='' && (($_GET['trending']??'')!=='1');
 $page=max(1,min(10000,(int)($_GET['page']??1)));
 $history=['items'=>[],'has_more'=>false,'page'=>1];
 if ($historical && $q!=='') {
