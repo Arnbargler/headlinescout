@@ -1,5 +1,15 @@
 # Roadmap
 
+## Three-tab application structure
+
+- [x] Main Dashboard retains Word Count and reserves space for future analysis
+- [x] Move Current Front Pages, source filter, title search and trending checkbox to Articles
+- [x] Settings gets dedicated /settings.php URL; old /lab.php URL remains compatible
+- [x] Share brand header, live scrolling Top Headlines ticker and three-tab navigation on all pages
+- [x] Update documentation and preserve scan behavior/SQLite history
+- [ ] Confirm browser layout and navigation on Colossus
+
+
 ## Five-headline collector and trending directions
 
 - [x] Restrict each future source scan to its first five qualifying headlines
