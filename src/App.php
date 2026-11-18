@@ -189,10 +189,11 @@ SQL);
         // Embedded publisher timestamps sometimes run into the last word,
         // e.g. "... SummitNov 18, 2026, 21:09 IST". Require a clock time
         // and a timezone to avoid removing a date that belongs to the story.
-        $title=trim(preg_replace(
+        $withoutTimestamp=trim(preg_replace(
             '/\s*(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:IST|UTC|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT)\s*$/iu',
             '',$title
         ));
+        if ($withoutTimestamp!=='') $title=$withoutTimestamp;
         // Google News can expose its trailing Material icon name as link text.
         $title=trim(preg_replace('/(?:\s+chevron_right)+\s*$/iu','',$title));
         preg_match_all('/[.!?]+[”"’\x{0027}]?(?=\s+[\p{Lu}\p{N}"“‘])/u',
