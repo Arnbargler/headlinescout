@@ -32,6 +32,7 @@ $shared=$add($first,'War summit opens in Geneva',80);
 $add($first,'War summit opens in Geneva',40,1,$shared); // repeated appearance should dedupe
 $add($second,'War negotiations resume today',50);
 $add($first,'Award ceremony held downtown',50); // substring, not whole word
+$add($first,'War-time plans announced today',49); // hyphenated token, not standalone war
 $add($first,'War headline in fourth place',55,4); // old scan beyond retained top 3
 $add($first,'War reports from earlier today',4000); // outside 1 hour
 $hour=ArticleSearch::search($db,'war','hour',0,1,$now);
