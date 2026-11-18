@@ -4,7 +4,7 @@ This file tracks **forward-looking work only**; implemented behaviour is documen
 
 ## Current baseline
 
-- Three tabs: Dashboard (six clickable Word Count windows), Articles (three current items/source or historical term/period searches), Settings (source/ignore management).
+- Three tabs: Dashboard (six clickable Word Count windows), Articles (single top headline per source by default; up to three when filtering, or historical term/period searches), Settings (source/ignore management).
 - Shared vertical three-headline rotator with 110-character eligibility and diversity-aware ranking.
 - Current/prior rolling windows: NOW 15 min, 1 h, 24 h, 7 d, 30 d and 365 d. Live updates, colored bars, short change highlights.
 - PHP/SQLite collector honors robots, extracts up to three headline links per source, retains scan history, and schedules up to three most-overdue eligible sources per run.
