@@ -157,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_status,s.last_scan_at,s.last_error, COUNT(h.id) AS headline_count, COALESCE(SUM(CASE WHEN h.is_current=1 THEN 1 ELSE 0 END),0) AS current_count FROM sources s LEFT JOIN headlines h ON h.source_id=s.id GROUP BY s.id ORDER BY s.id')->fetchAll();
 ?>
 <section class="panel formpanel"><h2>MANAGE SOURCES</h2>
-<p>Each source keeps its 10 highest matching links in page order per scan. Scan now refreshes that source immediately; Remove permanently deletes its headlines, appearances and scan history. Deleted default sources will not return.</p>
+<p>Each source keeps its 5 highest matching links in page order per scan. Scan now refreshes that source immediately; Remove permanently deletes its headlines, appearances and scan history. Deleted default sources will not return.</p>
 <?php if(!$existingSources):?><p>No sources configured.</p><?php endif;?>
 <div class="summary lab-summary">
 <?php foreach($existingSources as $s): ?>
