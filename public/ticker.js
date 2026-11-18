@@ -33,7 +33,6 @@
         track.style.transition = 'none';
         track.style.transform = 'translateY(0)';
         track.replaceChildren(fragment);
-        track.classList.toggle('ticker-static', items.length <= 1);
     };
 
     const rotate = () => {
