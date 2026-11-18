@@ -52,13 +52,13 @@ final class WordStats {
     }
 
     /**
-     * Counts occurrences of each word in unique stored headline titles first seen
+     * Counts occurrences of each word in unique stored headline titles last seen
      * inside rolling UTC intervals. One headline is counted once, not once per scan.
      * Ignored multiword phrases are removed before individual word counting.
      */
     public static function top(PDO $db, int $hours, array $ignored, int $limit=10): array {
         $cutoff=gmdate('c',time()-$hours*3600);
-        $stmt=$db->prepare('SELECT title FROM headlines WHERE first_seen_at >= ?');
+        $stmt=$db->prepare('SELECT title FROM headlines WHERE last_seen_at >= ?');
         $stmt->execute([$cutoff]);
         $counts=[];
         while ($row=$stmt->fetch()) {
