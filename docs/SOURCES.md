@@ -22,7 +22,7 @@ sqlite3 -header -column var/headlines.sqlite "SELECT id,name,homepage_url,enable
 5. Use **Scan now** under Manage Sources to test collection or wait until the source is due. Most recent successful scan feeds the Articles tab.
 6. **Remove** permanently deletes that source's saved headline and scan history; the button is deliberately guarded by name confirmation and a CSRF token.
 
-Source extraction is XPath-based. The collector keeps **up to three qualifying links in page order** (first three matches). Settings strategy previews can show more candidates; this is intentional. Headlines are normalized to first sentence and trailing Google News `chevron_right` is removed. A source may require custom XPath when its markup changes.
+Source extraction is XPath-based. The collector keeps **up to three qualifying links in page order** (first three matches). Settings strategy previews can show more candidates; this is intentional. Headlines are normalized to their first likely sentence. Leading CSS declaration leakage (e.g. generated `.css-*{...}`), gallery labels, trailing publication timestamps (with time and timezone), and trailing Google News `chevron_right` are removed. Legitimate dates in story titles are preserved. These cleaning rules also apply to Settings previews. Run `php bin/clean-headlines.php` for a dry-run preview of repairs to previously stored titles; back up SQLite and use `--apply` to commit changes. A source may require custom XPath when its markup changes.
 
 A site can block the collector via robots policy, connectivity, anti-bot filtering, or changed markup. Do not bypass policy or authentication to obtain sources. A 200 response alone does not guarantee that extracted candidates are genuine news items.
 
