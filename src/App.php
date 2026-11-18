@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS appearances (
 );
 CREATE INDEX IF NOT EXISTS headlines_recent ON headlines(last_seen_at DESC);
 CREATE INDEX IF NOT EXISTS scans_source ON scans(source_id,started_at DESC);
+CREATE INDEX IF NOT EXISTS scans_time_status ON scans(started_at,status);
 SQL);
         require_once __DIR__ . '/WordStats.php';
         WordStats::install($db);
@@ -205,7 +206,7 @@ SQL);
             if ($http !== 200) throw new RuntimeException('HTTP status ' . $http);
             $ct = strtolower($headers['content-type'] ?? '');
             if ($ct && !str_contains($ct,'html')) throw new RuntimeException('Unexpected content type: ' . $ct);
-            $items = array_slice(self::extract($html,$final,$source['selector']), 0, 10);
+            $items = array_slice(self::extract($html,$final,$source['selector']), 0, 5);
             $db->beginTransaction();
             $ins = $db->prepare('INSERT OR IGNORE INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
             $upd = $db->prepare('UPDATE headlines SET title=?,last_seen_at=?,is_current=1 WHERE source_id=? AND url=?');
