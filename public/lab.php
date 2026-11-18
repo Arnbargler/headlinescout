@@ -151,7 +151,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST') {
 <label>Display name <input name="name" required maxlength="70" value="<?=h(parse_url($probe['url'],PHP_URL_HOST)??'')?>" placeholder="Source name"></label>
 <label>Extraction method <select name="method"><?php foreach($probe['methods'] as $id=>$m):?><option value="<?=h($id)?>" <?=$id===$probe['suggested']?'selected':''?>><?=h($m['label'])?> (<?=(int)$m['count']?>)</option><?php endforeach;?></select></label>
 <button type="submit">Save source / method</button></form>
-<p class="fine">No scan is triggered when saving. Run <code>php bin/scan.php --all</code> to test ingestion.</p></section>
+<p class="fine">Saving does not trigger a scan. Use <strong>Scan now</strong> under Manage Sources to test the saved source.</p></section>
 <?php endif;?>
 <?php
 $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_status,s.last_scan_at,s.last_error, COUNT(h.id) AS headline_count, COALESCE(SUM(CASE WHEN h.is_current=1 THEN 1 ELSE 0 END),0) AS current_count FROM sources s LEFT JOIN headlines h ON h.source_id=s.id GROUP BY s.id ORDER BY s.id')->fetchAll();
@@ -194,7 +194,7 @@ $existingSources=$db->query('SELECT s.id,s.name,s.homepage_url,s.enabled,s.last_
 </div></section>
 
 <section class="panel formpanel"><h2>WORD COUNT — IGNORE LIST</h2>
-<p>Ignored words and phrases are excluded from the dashboard's 1-hour, 24-hour and 7-day counts. Add a single word or an exact phrase. Changes take effect on the next dashboard refresh and do not change stored headlines.</p>
+<p>Ignored words and phrases are excluded from the dashboard's six Word Count periods. Add a single word or an exact phrase. Changes take effect on the next dashboard refresh and do not change stored headlines.</p>
 <form method="post" class="lab-form ignore-add">
 <input type="hidden" name="csrf" value="<?=h(csrf())?>">
 <input type="hidden" name="action" value="ignore_add">
