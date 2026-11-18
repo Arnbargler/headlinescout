@@ -35,29 +35,47 @@ WHERE s.enabled=1
 ORDER BY s.id,a.position
 SQL;
         $rows=$db->query($sql)->fetchAll();
-        $ranked=[];
+        $candidates=[];
         foreach ($rows as $row) {
-            $words=WordStats::tokens($row['title'],$ignored);
-            $score=0;
-            foreach ($words as $word) {
-                if (isset($trending[$word])) $score++;
+            $matching=[];
+            foreach (WordStats::tokens($row['title'],$ignored) as $word) {
+                if (isset($trending[$word])) $matching[]=$word;
             }
-            if ($score===0) continue;
-            $row['matches']=$score;
-            $ranked[]=$row;
+            if (!$matching) continue;
+            $row['matching_words']=$matching;
+            $row['matches']=count($matching);
+            $candidates[]=$row;
         }
-        usort($ranked,static function (array $a,array $b): int {
-            // More matched mentions wins; homepage rank breaks ties, then stable ID.
-            return ($b['matches'] <=> $a['matches'])
-                ?: ($a['position'] <=> $b['position'])
-                ?: ($b['scan_id'] <=> $a['scan_id'])
-                ?: ($a['headline_id'] <=> $b['headline_id']);
-        });
+
+        // Greedy diversity: headline #1 wins on raw word matches; thereafter,
+        // previously unused trending words receive triple weight. Repeated
+        // terms still contribute, so topic coverage does not override relevance.
+        $selected=[];
+        $covered=[];
+        while ($candidates && count($selected)<3) {
+            usort($candidates,static function(array $a,array $b) use ($covered): int {
+                $score=static function(array $item) use ($covered): int {
+                    $total=0;
+                    foreach ($item['matching_words'] as $word) {
+                        $total+=isset($covered[$word]) ? 1 : 3;
+                    }
+                    return $total;
+                };
+                return ($score($b) <=> $score($a))
+                    ?: ($b['matches'] <=> $a['matches'])
+                    ?: ($a['position'] <=> $b['position'])
+                    ?: ($b['scan_id'] <=> $a['scan_id'])
+                    ?: ($a['headline_id'] <=> $b['headline_id']);
+            });
+            $winner=array_shift($candidates);
+            foreach ($winner['matching_words'] as $word) $covered[$word]=true;
+            $selected[]=$winner;
+        }
         return array_map(static fn($row)=>[
             'title'=>$row['title'],
             'url'=>$row['url'],
             'source'=>$row['source_name'],
             'matches'=>$row['matches']
-        ],array_slice($ranked,0,3));
+        ],$selected);
     }
 }
