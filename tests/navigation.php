@@ -11,9 +11,7 @@ foreach(['dashboard','articles','settings'] as $tab) {
     ob_start();
     include dirname(__DIR__).'/public/_chrome.php';
     $html=ob_get_clean();
-    foreach(['/articles.php','/settings.php','TOP HEADLINES','/ticker.php'] as $expected) {
-        // ticker.js fetches /ticker.php; HTML includes the shared ticker track.
-        if($expected==='/ticker.php') $expected='headline-ticker-track';
+    foreach(['/articles.php','/settings.php','TOP HEADLINES','headline-ticker-track'] as $expected) {
         if(!str_contains($html,$expected)){
             fwrite(STDERR,"FAIL: $tab missing shared chrome element $expected\n");
             exit(1);
