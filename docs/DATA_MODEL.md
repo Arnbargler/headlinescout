@@ -1,64 +1,82 @@
-# Proposed SQLite data model (design, not yet migrations)
+# HeadlineScout SQLite schema — implemented
 
-The schema should be implemented and tested during v0.1, not assumed complete.
+The schema is created idempotently by `App::install()` in `src/App.php` against `var/headlines.sqlite`. This is **current runtime documentation**, not a proposed schema. Check the code before changing field definitions.
 
-## sources
+## Tables
 
-- `id` INTEGER PRIMARY KEY
-- `name` TEXT NOT NULL
-- `homepage_url` TEXT NOT NULL UNIQUE
-- `enabled` INTEGER NOT NULL DEFAULT 1
-- `interval_seconds` INTEGER NOT NULL DEFAULT 900
-- `extractor_type` TEXT NOT NULL DEFAULT 'html'
-- `extractor_config_json` TEXT (selectors, exclusion rules and section names)
-- `next_scan_at` TEXT (UTC ISO-8601)
-- `last_success_at` TEXT (UTC ISO-8601)
-- `last_error` TEXT
+### `sources`
 
-## headlines
+| Column | Type / meaning |
+|---|---|
+| `id` | INTEGER primary key |
+| `name` | TEXT required display name |
+| `homepage_url` | TEXT unique homepage URL |
+| `interval_seconds` | INTEGER default 900 (minimum source scan interval) |
+| `enabled` | INTEGER default 1 |
+| `selector` | TEXT, saved XPath expression; default heading-link strategy |
+| `last_scan_at` | TEXT UTC timestamp (attempt regardless of outcome) |
+| `last_success_at` | TEXT UTC timestamp |
+| `last_status` | TEXT latest status |
+| `last_error` | TEXT latest error (nullable) |
 
-- `id` INTEGER PRIMARY KEY
-- `source_id` INTEGER NOT NULL REFERENCES sources(id)
-- `canonical_url` TEXT NOT NULL
-- `title` TEXT NOT NULL
-- `first_seen_at` TEXT NOT NULL
-- `last_seen_at` TEXT NOT NULL
-- `is_current` INTEGER NOT NULL DEFAULT 1
-- Unique constraint on (`source_id`, `canonical_url`)
+### `headlines`
 
-Note: headline edits may be captured separately in a later `headline_revisions` table. A story shared by several sources remains a distinct source-headline record; cross-source clustering comes later.
+| Column | Type / meaning |
+|---|---|
+| `id` | INTEGER primary key |
+| `source_id` | INTEGER foreign key to sources |
+| `url` | TEXT, original normalized article URL |
+| `title` | TEXT, cleaned one-sentence headline |
+| `first_seen_at` | TEXT UTC timestamp |
+| `last_seen_at` | TEXT UTC timestamp |
+| `is_current` | INTEGER 0/1 current scan membership |
 
-## scans
+Unique constraint `(source_id,url)`. An article with the same URL found in subsequent scans updates its existing row. Old headline records remain after falling off a homepage.
 
-- `id` INTEGER PRIMARY KEY
-- `source_id` INTEGER NOT NULL REFERENCES sources(id)
-- `started_at` TEXT NOT NULL
-- `finished_at` TEXT
-- `http_status` INTEGER
-- `status` TEXT NOT NULL (queued/running/success/partial/error)
-- `candidate_count` INTEGER NOT NULL DEFAULT 0
-- `accepted_count` INTEGER NOT NULL DEFAULT 0
-- `new_count` INTEGER NOT NULL DEFAULT 0
-- `error_message` TEXT
+### `scans`
 
-## appearances
+| Column | Type / meaning |
+|---|---|
+| `id` | INTEGER primary key |
+| `source_id` | INTEGER foreign key |
+| `started_at` | TEXT UTC timestamp |
+| `finished_at` | TEXT UTC timestamp |
+| `status` | TEXT; `success` or `error` |
+| `http_status` | INTEGER nullable HTTP response |
+| `found` | INTEGER number of qualifying retained links |
+| `added` | INTEGER number of newly inserted headlines |
+| `error` | TEXT nullable failure reason |
 
-- `id` INTEGER PRIMARY KEY
-- `scan_id` INTEGER NOT NULL REFERENCES scans(id)
-- `headline_id` INTEGER NOT NULL REFERENCES headlines(id)
-- `section_name` TEXT
-- `section_position` INTEGER
-- `overall_position` INTEGER
-- Unique constraint on (`scan_id`, `headline_id`, `section_name`)
+### `appearances`
 
-A valid successful scan can update `is_current` for articles no longer on the homepage. Failed or uncertain scans must not clear the current state.
+| Column | Type / meaning |
+|---|---|
+| `scan_id` | INTEGER foreign key to scans |
+| `headline_id` | INTEGER foreign key to headlines |
+| `position` | INTEGER homepage rank from extraction, 1–5 for current scans |
 
-## future: analyses
+Primary key `(scan_id,headline_id)`. This table is the historical input to word statistics. Every successful scan creates up to five appearances, even for already-known headline URLs.
 
-- `id`, `headline_id`, `analysis_type`, `prompt_version`, `model_name`, `generated_at`, `result_text`, `article_fetch_status`
+### `ignored_terms`
 
-AI results must separate the source article's claims from model inference and speculation.
+`id` INTEGER primary key, `term` TEXT unique, `created_at` TEXT UTC timestamp. Supports exact ignored words and ignored phrases in all Word Count views.
 
-## Data retention
+### `settings`
 
-Keep headlines and scan summaries by default; allow pruning detailed per-scan appearances after a configurable period if storage grows. Never commit the production SQLite file.
+`key` TEXT primary key, `value` TEXT required. Currently stores initialization markers so user-removed default sources and ignore terms aren't recreated on subsequent requests.
+
+## Indexes
+
+- `headlines_recent` on `headlines(last_seen_at DESC)`
+- `scans_source` on `scans(source_id, started_at DESC)`
+- `scans_time_status` on `scans(started_at,status)`
+
+The connection enables SQLite WAL mode, foreign keys, and a 5-second busy timeout.
+
+## Retention and behaviour
+
+Historical scans, appearances and headlines are retained by default, enabling progressively longer word comparisons (up to two years of data for a fully populated prior-year window). There is no automatic pruning, history browser, schema migration framework, or AI analysis table.
+
+A failed scan does not clear the source's previous current headlines. **Known limitation:** a successful HTTP fetch with no extracted qualifying links can be treated as an empty successful scan; consider guarding this in a future feature change.
+
+**Never delete or overwrite production `var/headlines.sqlite` during cleanup**. Its WAL/SHM files and scan log are also runtime artifacts excluded from Git.
