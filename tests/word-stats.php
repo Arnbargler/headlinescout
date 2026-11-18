@@ -31,7 +31,7 @@ $add=function (int $minutesAgo,array $titles) use ($db,$source,$now,$insertHeadl
 $add(30,['Rocket market rocket launch','Market economy market','Drone economy','Tech progress']);
 $add(15,['Rocket market rocket launch']); // same headline in second scan, counts only once
 $add(90,['Rocket rocket drone','Market drone','Tech progress previous']);
-$add(120,['Market tech']);
+$add(150,['Market tech']);
 $add(26*60,['Drone tech yesterday']);
 $add(3*24*60,['Tech market week']);
 $add(9*24*60,['Drone from earlier week']);
