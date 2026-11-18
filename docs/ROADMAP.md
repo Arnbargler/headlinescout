@@ -1,5 +1,17 @@
 # Roadmap
 
+## Scheduler fairness and expanded Word Count periods
+
+- [x] Prioritize the three most overdue eligible sources each minute, regardless of source ID
+- [x] Keep source-specific intervals and force-all behavior
+- [x] Add NOW 15-minute vs previous 15-minute comparison
+- [x] Add rolling 30-day vs previous 30-day and 365-day vs previous 365-day comparison
+- [x] Show NOW / 1 hour / 24 hours in top row; 7 days / 30 days / 1 year below
+- [x] Preserve live 30-second updates, colored trend bars and change highlight
+- [x] Add scheduler and period boundary regression tests
+- [ ] Run syntax and regression tests on Colossus and inspect new dashboard
+
+
 ## Three-tab application structure
 
 - [x] Main Dashboard retains Word Count and reserves space for future analysis
