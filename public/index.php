@@ -14,7 +14,7 @@ foreach (\HeadlineScout\WordStats::periods() as $period){
     $wordStats[]=[
         'key'=>$period['key'],
         'label'=>$period['label'],
-        'rows'=>\HeadlineScout\WordStats::trendingSeconds($db,$period['seconds'],$ignored)
+        'rows'=>\HeadlineScout\StatsCache::period($db,$period['key'],$ignored)['rows']
     ];
 }
 ?>
