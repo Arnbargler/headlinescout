@@ -64,7 +64,7 @@ SELECT DISTINCT h.id, h.title
 FROM scans s
 JOIN appearances a ON a.scan_id=s.id
 JOIN headlines h ON h.id=a.headline_id
-WHERE s.status='success' AND a.position <= 5 AND s.started_at >= ? AND s.started_at < ?
+WHERE s.status='success' AND a.position <= 3 AND s.started_at >= ? AND s.started_at < ?
 SQL);
         $stmt->execute([gmdate('c',$start),gmdate('c',$end)]);
         $counts=[];
