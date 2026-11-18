@@ -28,6 +28,8 @@ $dir=sys_get_temp_dir().'/headlinescout-cache-test-'.getmypid();
 ensure(mkdir($dir,0700),'make isolated cache directory');
 try {
     ensure(StatsCache::TTL===['now'=>30,'hour'=>60,'day'=>300,'week'=>900,'month'=>3600,'year'=>21600],'specified independent TTL values');
+    $nowSnapshot=StatsCache::period($db,'now',$ignored,$dir);
+    ensure($nowSnapshot['expires_at']-$nowSnapshot['calculated_at']===30,'NOW refreshes every 30 seconds, while its ranking window stays 15 minutes');
     $first=StatsCache::period($db,'hour',$ignored,$dir);
     ensure(($first['top']['rocket']??null)===1,'first snapshot has rocket term');
     ensure($first['rows']===WordStats::snapshot($db,3600,$ignored,$first['calculated_at'])['rows'],'cached rows match original calculation');
