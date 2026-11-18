@@ -14,6 +14,8 @@ The shared header displays the **HeadlineScout** brand, a diversity-aware **Top 
 
 The browser navigation tabs share the branding and the ticker; they do not require a JavaScript single-page app or change the scanner/database.
 
+Verify the shared chrome with `php tests/navigation.php` and lint `public/index.php`, `public/articles.php`, `public/lab.php`, `public/settings.php` and `public/_chrome.php` after pulling.
+
 ## Initial sources
 
 - [CNN](https://www.cnn.com/)
