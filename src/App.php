@@ -176,7 +176,23 @@ SQL);
      * Protect common abbreviated titles and initialisms (Dr., U.S., etc.).
      */
     public static function firstSentence(string $title): string {
+        // Some publishers leak generated CSS rules from the headline link's
+        // textContent. Strip complete, leading declaration blocks *before*
+        // sentence parsing: ".css-..." otherwise looks like punctuation.
+        $title=trim(preg_replace(
+            '~^(?:\s*\.[a-z][a-z0-9_-]*\s*\{[^{}]{0,600}\}\s*)+~iu',
+            '', $title
+        ));
+        // A gallery/category label is metadata, not part of the headline.
+        $title=trim(preg_replace('/^(?:Gallery|Photos|Photo Gallery)\s*\|\s*/iu','',$title));
         $title=trim(preg_replace('/\s+/u',' ',$title));
+        // Embedded publisher timestamps sometimes run into the last word,
+        // e.g. "... SummitNov 18, 2026, 21:09 IST". Require a clock time
+        // and a timezone to avoid removing a date that belongs to the story.
+        $title=trim(preg_replace(
+            '/\s*(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},?\s+\d{4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:IST|UTC|GMT|EST|EDT|CST|CDT|MST|MDT|PST|PDT)\s*$/iu',
+            '',$title
+        ));
         // Google News can expose its trailing Material icon name as link text.
         $title=trim(preg_replace('/(?:\s+chevron_right)+\s*$/iu','',$title));
         preg_match_all('/[.!?]+[”"’\x{0027}]?(?=\s+[\p{Lu}\p{N}"“‘])/u',
