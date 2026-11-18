@@ -36,7 +36,8 @@ $add($first,'War-time plans announced today',49); // hyphenated token, not stand
 $add($first,'War headline in fourth place',55,4); // old scan beyond retained top 3
 $add($first,'War reports from earlier today',4000); // outside 1 hour
 $hour=ArticleSearch::search($db,'war','hour',0,1,$now);
-verify(count($hour['items'])===2,'find two distinct top-three headlines inside current hour');
+verify(count($hour['items'])===2,'find two distinct top-three headlines inside current hour; got '.count($hour['items']).' results: '.json_encode(array_column($hour['items'],'title'),JSON_UNESCAPED_UNICODE));
+
 verify($hour['items'][0]['title']==='War summit opens in Geneva','newest matching appearance orders first');
 verify(count(array_unique(array_column($hour['items'],'id')) )===2,'repeated scan appearances deduplicated');
 verify(!$hour['has_more'],'no extra page for two matches');
