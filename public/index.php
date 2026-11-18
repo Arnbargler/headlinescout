@@ -8,6 +8,8 @@ function e(mixed $value): string { return htmlspecialchars((string)$value, ENT_Q
 $sourceFilter=filter_input(INPUT_GET,'source',FILTER_VALIDATE_INT) ?: 0;
 $q=trim((string)($_GET['q']??''));
 $sources=$db->query('SELECT id,name,last_success_at,last_status FROM sources WHERE enabled=1 ORDER BY id')->fetchAll();
+$lastScanAt=$sources ? max(array_map(static fn($s)=>strtotime((string)($s['last_success_at']??''))?:0,$sources)) : 0;
+$scansStale=$lastScanAt>0 && time()-$lastScanAt>3600;
 $ignored=\HeadlineScout\WordStats::ignored($db);
 $wordStats=[];
 foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
@@ -79,7 +81,7 @@ foreach ($sources as $source) {
 <div class="word-stats-grid">
 <?php foreach($wordStats as $period): ?>
 <div class="word-period"><h3><?=e($period['label'])?></h3>
-<?php if(!$period['words']):?><p class="word-empty">No matching words yet.</p><?php else:?>
+<?php if(!$period['words']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
 <ol class="word-ranking"><?php foreach($period['words'] as $word=>$count):?>
 <li><span class="word-label"><?=e($word)?></span><strong class="word-total"><?=(int)$count?></strong></li>
 <?php endforeach;?></ol>
