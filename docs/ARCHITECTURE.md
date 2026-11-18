@@ -27,12 +27,13 @@ Browser
 | `src/Scheduler.php` | Prioritize up to three due sources by earliest next-due timestamp |
 | `src/SourceLab.php` | One-page fetch with six alternative XPath strategies for Settings preview |
 | `src/WordStats.php` | Ignore rules, tokens, deduplicated historical counts, six rolling comparisons |
+| `src/ArticleSearch.php` | Period-validated historical top-three appearance search, whole-word matching, source filtering and pagination |
 | `src/StatsCache.php` | Shared, independently timed file-backed snapshots of trend rows and top words; ignore-list invalidation |
 | `src/Ticker.php` | Source-independent scoring and diversified selection of three eligible current headlines |
 | `bin/scan.php` | CLI collector; shared file lock; `--all` override |
 | `bin/benchmark-stats.php` | Non-destructive read-only statistics benchmark using isolated temporary cache |
 | `public/index.php` | Dashboard six-panel Word Count |
-| `public/articles.php` | Latest per-source front pages, search and optional trending-word filter |
+| `public/articles.php` | Latest per-source front pages plus term/time-range historical drilldowns, search and optional trending-word filter |
 | `public/settings.php` | Current Settings URL, includes `lab.php` |
 | `public/lab.php` | Settings forms, source management, manual scans, ignore terms; retained URL for compatibility |
 | `public/_chrome.php` | Shared header, top-headline rotator markup and navigation |
@@ -71,4 +72,6 @@ Settings has no authentication: LAN-only by design. State-changing Settings form
 
 ## Intentional constraints / future expansion
 
-No RSS backfill, article-body extraction, historical news import, full-text search, hosted authentication, AI summaries, or persistent SPA. Adding analysis to the Dashboard is a future feature, not an existing capability. Prefer focused extensions over replacing the functional, simple stack.
+Dashboard Word Count rows link to `/articles.php?q=...&period=...`; this enables a historical search of collected headlines in the chosen 15 min/1h/24h/7d/30d/365d window. This is an on-demand search rather than an automatic historical archive view: results are deduplicated by headline ID, filtered to successful scan appearances at positions 1–3, ordered by latest matched appearance, and paginated at 100 per page. The normal Articles mode continues to show current front pages. Title matching uses a case-insensitive word boundary check (with an SQLite substring prefilter).
+
+No RSS backfill, article-body extraction, historical news import, full-text indexing, hosted authentication, AI summaries, or persistent SPA. Adding analysis to the Dashboard is a future feature, not an existing capability. Prefer focused extensions over replacing the functional, simple stack.
