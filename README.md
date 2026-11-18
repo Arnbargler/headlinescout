@@ -28,6 +28,31 @@ Bar colors: green ↑, pink ↓, orange NEW, blue →. The Dashboard polls `/wor
 
 Historical periods only contain data actually collected; meaningful full year-on-year comparisons take **730 days** of history.
 
+### Shared statistics cache
+
+Dashboard, ticker, and the Articles top-word filter now reuse the **same per-period statistics snapshots**. Snapshots contain both the previous-window trend rows and the current top ten words; no repeated historical counting is needed for a warm cache hit.
+
+| Period | Refresh after |
+|---|---|
+| NOW (15 minutes) | 60 seconds |
+| 1 hour | 60 seconds |
+| 24 hours | 5 minutes |
+| 7 days | 15 minutes |
+| 30 days | 1 hour |
+| 1 year | 6 hours |
+
+Snapshots live under `var/cache/word-{period}.json` (outside `public/`), with per-period `.lock` files for concurrency control. This directory needs to be writable by both the CLI user and the PHP web-server user, **if those are different**. On shared hosting, make `var/cache/` writable to PHP; no Redis, extra cron jobs, or separate cache service required. Ignore-list changes invalidate snapshots automatically; newly scanned headlines enter each comparison **on that period's next refresh**, not instantly. Clients still poll at the same 30-second (Dashboard) and 15-second (ticker) cadence.
+
+When a snapshot expires, one request rebuilds it while other requests can keep serving the prior snapshot. If the cache directory isn't writable, calculations still work but may be slower (uncached). Initial requests for long periods may take longer than warm reads.
+
+**Benchmark on Colossus** (uses the existing database but writes test cache files only in a temporary directory):
+
+```bash
+php bin/benchmark-stats.php
+```
+
+Compare uncached, cold-cache, and warm-cache timing for each period. Later hosting decisions should use actual timings rather than assumptions.
+
 ### Top Headlines
 
 All three tabs show one of up to three clickable headlines, rotating upward approximately every 6.5 seconds. The header omits source names and excludes titles **over 110 Unicode characters before ranking**. The first headline has the most trending-word matches; subsequent picks triple the weight of previously unused trending words to encourage variety. Ranking vocabulary comes from the **1-hour, 24-hour, and 7-day** lists. `/ticker.php` is polled every 15 seconds; rotation pauses on hover/focus.
@@ -72,6 +97,7 @@ cd ~/headlinescout
 php -l src/App.php
 php -l src/WordStats.php
 php -l src/SourceLab.php
+php -l src/StatsCache.php
 php -l src/Ticker.php
 php -l src/Scheduler.php
 php -l bin/scan.php
