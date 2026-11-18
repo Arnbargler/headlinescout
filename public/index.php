@@ -13,12 +13,12 @@ $scansStale=$lastScanAt>0 && time()-$lastScanAt>3600;
 $ignored=\HeadlineScout\WordStats::ignored($db);
 $wordStats=[];
 foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label) {
-    $wordStats[]=['label'=>$label,'words'=>\HeadlineScout\WordStats::top($db,$hours,$ignored)];
+    $wordStats[]=['label'=>$label,'rows'=>\HeadlineScout\WordStats::trending($db,$hours,$ignored)];
 }
 // Union of the three displayed top-ten word lists; ignore repeated words.
 $trendingWords=[];
 foreach ($wordStats as $period) {
-    foreach ($period['words'] as $word=>$count) $trendingWords[mb_strtolower((string)$word,'UTF-8')]=true;
+    foreach ($period['rows'] as $entry) $trendingWords[mb_strtolower($entry['word'],'UTF-8')]=true;
 }
 $tickerItems=\HeadlineScout\Ticker::items($db);
 $trendingOnly=(($_GET['trending']??'')==='1');
@@ -33,9 +33,9 @@ $matchesTrending=static function (string $title) use ($trendingWords): bool {
 $sections=[];
 $visibleCount=0;
 // For each source, use its most recent SUCCESSFUL scan, not the complete historical
-// headline collection. Limit to ten BEFORE applying the optional dashboard search.
+// headline collection. Limit to five BEFORE applying the optional dashboard search.
 $latest=$db->prepare("SELECT id,finished_at FROM scans WHERE source_id=? AND status='success' ORDER BY id DESC LIMIT 1");
-$top=$db->prepare('SELECT h.title,h.url,h.first_seen_at,a.position FROM appearances a JOIN headlines h ON h.id=a.headline_id WHERE a.scan_id=? ORDER BY a.position ASC LIMIT 10');
+$top=$db->prepare('SELECT h.title,h.url,h.first_seen_at,a.position FROM appearances a JOIN headlines h ON h.id=a.headline_id WHERE a.scan_id=? ORDER BY a.position ASC LIMIT 5');
 foreach ($sources as $source) {
     if ($sourceFilter && $sourceFilter!==(int)$source['id']) continue;
     $latest->execute([$source['id']]);
@@ -77,20 +77,26 @@ foreach ($sources as $source) {
 </div>
 <main class="shell">
 <section class="word-stats">
-<div class="word-stats-title"><h2>WORD COUNT</h2><span>Headline titles first collected within each rolling period · ignored words excluded</span></div>
+<div class="word-stats-title"><h2>WORD COUNT</h2><span>Mentions in unique headlines per period · arrows compare with previous matching period</span></div>
 <div class="word-stats-grid">
 <?php foreach($wordStats as $period): ?>
 <div class="word-period"><h3><?=e($period['label'])?></h3>
-<?php if(!$period['words']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
-<ol class="word-ranking"><?php foreach($period['words'] as $word=>$count):?>
-<li><span class="word-label"><?=e($word)?></span><strong class="word-total"><?=(int)$count?></strong></li>
+<?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
+<ol class="word-ranking"><?php foreach($period['rows'] as $entry): ?>
+<li>
+  <span class="word-label"><?=e($entry['word'])?></span>
+  <span class="word-bar" aria-hidden="true"><span class="word-bar-fill" style="width:<?=e($entry['percent'])?>%"></span></span>
+  <strong class="word-total"><?=(int)$entry['count']?></strong>
+  <span class="word-direction direction-<?=e($entry['direction'])?>" title="<?=e($entry['direction']==='new'?'Not in previous top 10':('Previous period: '.$entry['previous'].' mentions'))?>" aria-label="<?=e($entry['direction']==='new'?'New to top ten':($entry['direction']==='up'?'Trending up':($entry['direction']==='down'?'Trending down':'No change')))?>">
+  <?=match($entry['direction']){'up'=>'↑','down'=>'↓','flat'=>'→',default=>'NEW'}?></span>
+</li>
 <?php endforeach;?></ol>
 <?php endif;?></div>
 <?php endforeach;?>
 </div></section>
 
 <section class="panel">
-<div class="panel-head"><h2>CURRENT FRONT PAGES</h2><span><?=$visibleCount?> headlines · up to 10 per source</span></div>
+<div class="panel-head"><h2>CURRENT FRONT PAGES</h2><span><?=$visibleCount?> headlines · up to 5 per source</span></div>
 <form method="get" class="filters">
 <label>Source <select name="source"><option value="0">All sources</option><?php foreach($sources as $s): ?><option value="<?=(int)$s['id']?>" <?=$sourceFilter===(int)$s['id']?'selected':''?>><?=e($s['name'])?></option><?php endforeach; ?></select></label>
 <label class="search">Search current headlines <input type="search" name="q" placeholder="Filter displayed headlines" value="<?=e($q)?>"></label>
@@ -104,7 +110,7 @@ foreach ($sources as $source) {
 <span><?= $scan ? 'Last successful scan: '.e(gmdate('M j, H:i',strtotime($scan['finished_at']))).' UTC' : 'Not yet scanned' ?></span>
 </div>
 <?php if(!$items): ?>
-<div class="source-empty"><?= ($q!=='' || $trendingOnly) ? 'No headlines match the selected filters in this source’s latest top 10.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Source Lab.') ?></div>
+<div class="source-empty"><?= ($q!=='' || $trendingOnly) ? 'No headlines match the selected filters in this source’s latest top 5.' : ($scan ? 'No headlines found in its most recent successful scan.' : 'No successful scan yet. Check Source Lab.') ?></div>
 <?php else: ?>
 <div class="entries">
 <?php foreach($items as $h): ?>
@@ -116,5 +122,5 @@ foreach ($sources as $source) {
 </div>
 <?php endforeach; ?>
 </section>
-<footer>HeadlineScout · Latest 10 per source · Historical headlines retained for a future History page · AI analysis coming later</footer>
+<footer>HeadlineScout · Latest 5 per source · Historical headlines retained for a future History page · AI analysis coming later</footer>
 </main><script src="/ticker.js" defer></script></body></html>
