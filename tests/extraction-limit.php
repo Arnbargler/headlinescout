@@ -11,8 +11,8 @@ foreach(range(1,9) as $n){
 $html.='</main></body></html>';
 $selector='//a[.//h1 or .//h2 or .//h3 or ancestor::h1 or ancestor::h2 or ancestor::h3]';
 $all=App::extract($html,'https://example.org/',$selector);
-$limited=App::extract($html,'https://example.org/',$selector,5);
-if(count($all)!==9 || count($limited)!==5 || !str_ends_with($limited[4]['url'],'story-5')){
+$limited=App::extract($html,'https://example.org/',$selector,3);
+if(count($all)!==9 || count($limited)!==3 || !str_ends_with($limited[2]['url'],'story-3')){
     fwrite(STDERR,"FAIL: extraction limit or page order\n"); exit(1);
 }
 
