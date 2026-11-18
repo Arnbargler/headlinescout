@@ -53,9 +53,9 @@ Unique constraint `(source_id,url)`. An article with the same URL found in subse
 |---|---|
 | `scan_id` | INTEGER foreign key to scans |
 | `headline_id` | INTEGER foreign key to headlines |
-| `position` | INTEGER homepage rank from extraction, 1–5 for current scans |
+| `position` | INTEGER homepage rank from extraction, 1–3 for new scans (older scans may have 4–5) |
 
-Primary key `(scan_id,headline_id)`. This table is the historical input to word statistics. Every successful scan creates up to five appearances, even for already-known headline URLs.
+Primary key `(scan_id,headline_id)`. This table is the historical input to word statistics. Every successful scan creates up to three appearances, even for already-known headline URLs.
 
 ### `ignored_terms`
 
