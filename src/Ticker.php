@@ -29,7 +29,7 @@ JOIN scans sc ON sc.id=(
     WHERE sc2.source_id=s.id AND sc2.status='success'
     ORDER BY sc2.id DESC LIMIT 1
 )
-JOIN appearances a ON a.scan_id=sc.id AND a.position<=10
+JOIN appearances a ON a.scan_id=sc.id AND a.position<=5
 JOIN headlines h ON h.id=a.headline_id
 WHERE s.enabled=1
 ORDER BY s.id,a.position
