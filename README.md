@@ -4,6 +4,14 @@
 
 **Status: working LAN installation on Colossus.** Automated collection uses cron; source management and manual scanning are available in Settings. Some sources can still reject scraping or require custom selectors.
 
+## Live Word Count change highlights
+
+The Dashboard Word Count section now refreshes automatically **every 30 seconds** through a read-only `/word-stats.php` JSON endpoint and `/word-stats.js`. It does not trigger website scraping, modify scan schedules, or change stored data.
+
+When a word enters the current top ten, moves position, or changes its mention count, its row briefly **flashes with a soft cyan glow** (about 1.65 seconds). Existing words whose rank and count stay unchanged do not flash. The trend-colored bar and direction indicator are retained. For users preferring reduced motion, flashing is disabled.
+
+The initial server-rendered Dashboard remains visible without JavaScript. The client compares updates against its existing rows, rather than treating the entire first fetch as new. The Dashboard no longer uses a five-minute full-page refresh; its headline rotator and Word Count panel independently poll for fresh data while the tab is visible.
+
 ## Three-tab interface
 
 The shared header displays the **HeadlineScout** brand, a diversity-aware **Top Headlines** scrolling ticker, and three tabs. Its layout and live ticker are rendered from one shared PHP component (`public/_chrome.php`) so all pages stay consistent. Navigation loads the selected page normally, and the ticker fetches new rankings every 15 seconds while visible.
