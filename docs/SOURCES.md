@@ -1,31 +1,44 @@
-# Initial monitored sources
+# Source management and extraction
 
-These are starting targets, **not verified working extractors**. All collection tests should be performed on Colossus and checked against each website's robots.txt and terms.
+HeadlineScout monitors **homepage** article links rather than RSS feeds or article archives. It does not crawl article bodies.
 
-| Source | Homepage | Extraction notes |
-|---|---|---|
-| CNN | https://www.cnn.com/ | Test whether PHP/cURL can retrieve the homepage; confirm relevant article links and access rules. |
-| ZeroHedge | https://www.zerohedge.com/ | Identify genuine article headlines; exclude navigation, sponsored links and inaccessible premium links if needed. |
-| The Gateway Pundit | https://www.thegatewaypundit.com/ | Map Featured/Latest/Trending homepage sections if present in actual HTML. |
+## Configured sources
 
-## Initial testing procedure
+The *actual* source list lives in Colossus's SQLite `sources` table and is managed through the **Settings** tab (`/settings.php`, backwards-compatible `/lab.php`). A fresh database initially seeds CNN, ZeroHedge and The Gateway Pundit as examples. These are initial seed records, **not** a reliable inventory of the currently configured/working sources. User-added sources and deletions persist in SQLite; don't recreate deleted defaults.
 
-1. Fetch homepage with a clear non-deceptive user agent and sensible timeout.
-2. Inspect HTTP status, redirect chain, Content-Type, payload size, and robots directives.
-3. Inspect rendered-source HTML returned to the collector; do not assume the browser DOM equals fetched HTML.
-4. Propose per-source headline selectors and exclusions.
-5. Preview top ~30 headline titles and absolute URLs; manually compare with the actual front page.
-6. Record title quality, duplication, section order, URL normalization, and whether parsing requires JavaScript.
-7. Save fixture HTML **only if permitted**, otherwise save sanitized test observations.
+Check the actual sources on Colossus:
 
-## Acceptance criteria for a source
+```bash
+cd ~/headlinescout
+sqlite3 -header -column var/headlines.sqlite "SELECT id,name,homepage_url,enabled,interval_seconds,last_status,last_scan_at FROM sources ORDER BY id;"
+```
 
-- At least the main current homepage headlines are extracted accurately.
-- Navigation, footer, recommendation and ad links do not dominate results.
-- Correct absolute, working article URLs.
-- Failures and changes in layout are explicitly surfaced, never silently treated as zero news.
-- No authentication or paywall circumvention.
+## Add or change a source
 
-## Polling
+1. Open Settings and submit a public HTTP(S) homepage URL to **Test extraction methods**.
+2. The app fetches that homepage with cURL after a robots.txt policy check.
+3. Settings compares six methods: heading links, article links, headline/title classes, headline blocks, main-content heading links, and all same-site links (diagnostic). Review the displayed candidate samples rather than trusting the highest suggested count.
+4. Choose a strategy, edit the source display name, and **Save**. Saving the same homepage URL updates the stored selector; it does not immediately scan.
+5. Use **Scan now** under Manage Sources to test collection or wait until the source is due. Most recent successful scan feeds the Articles tab.
+6. **Remove** permanently deletes that source's saved headline and scan history; the button is deliberately guarded by name confirmation and a CSRF token.
 
-15 minutes by default locally; consider 30 minutes on external host. Individual sources may need a slower frequency or no automated retrieval if the site's policy requires it.
+Source extraction is XPath-based. The collector keeps **up to five qualifying links in page order** (first five matches). Settings strategy previews can show more candidates; this is intentional. Headlines are normalized to first sentence and trailing Google News `chevron_right` is removed. A source may require custom XPath when its markup changes.
+
+A site can block the collector via robots policy, connectivity, anti-bot filtering, or changed markup. Do not bypass policy or authentication to obtain sources. A 200 response alone does not guarantee that extracted candidates are genuine news items.
+
+## Scheduling and diagnostics
+
+Sources default to 900-second intervals. The CLI scheduler selects up to three most-overdue due sources at each invocation, except `--all`. Colossus's intended cron check cadence is twice per minute with one delayed invocation; verify it using `crontab -l`. The shared scan lock prevents overlap.
+
+```bash
+cd ~/headlinescout
+tail -n 30 var/cron.log
+php bin/scan.php --all
+sqlite3 -header -column var/headlines.sqlite "SELECT name,last_status,last_error,last_scan_at FROM sources ORDER BY id;"
+```
+
+`--all` triggers actual network traffic to every enabled source; use sparingly. Settings **Scan now** can handle a single source.
+
+## Acceptance criteria
+
+A useful source yields current article headlines in genuine homepage order with working public links and few navigation/ad entries. Scanning failures should be visible in Settings. **Known limitation:** a homepage that returns successful HTTP but yields zero extracted links may be logged as a successful empty front page, which could clear that source's current flags. Consider adding a zero-result safeguard in a future change.
