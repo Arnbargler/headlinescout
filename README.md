@@ -93,6 +93,8 @@ These controls are deliberately unauthenticated: **any device able to reach port
 
 ## Headline sentence cleanup
 
+When Google News exposes the Material icon name `chevron_right` at the end of a headline, extraction removes it before saving. Only the trailing icon token is stripped; ordinary words and the article URL are preserved.
+
 HeadlineScout keeps only the **first sentence** of each extracted homepage title before it reaches SQLite. This also affects Source Lab extraction previews. Sentences are detected at a period, question mark or exclamation mark followed by a likely new sentence; common abbreviations (e.g. `Dr.`, `U.S.`) and decimal points are protected. The original article URL stays unchanged, and existing stored titles are not rewritten retroactively. Re-scanning a still-present article will update its saved title.
 
 Check the parser after pulling: `php tests/extraction-limit.php`.
