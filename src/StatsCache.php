@@ -12,7 +12,7 @@ use RuntimeException;
  */
 final class StatsCache {
     public const TTL = [
-        'now' => 60,
+        'now' => 30,
         'hour' => 60,
         'day' => 300,
         'week' => 900,
@@ -38,7 +38,7 @@ final class StatsCache {
                 return self::calculate($db,$span,$ignored,$ttl,'memory');
             }
         }
-        $hash=hash('sha256',json_encode(array_column($ignored,'term'),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
+        $hash=hash('sha256','top-three-v1:'.json_encode(array_column($ignored,'term'),JSON_UNESCAPED_UNICODE|JSON_THROW_ON_ERROR));
         $directory ??= dirname(__DIR__).'/var/cache';
         $file=$directory.'/word-'.$key.'.json';
         $now=time();
