@@ -9,8 +9,11 @@ try {
     \HeadlineScout\App::install($db);
     $ignored=\HeadlineScout\WordStats::ignored($db);
     $periods=[];
-    foreach ([1,24,168] as $hours) {
-        $periods[]=['hours'=>$hours,'rows'=>\HeadlineScout\WordStats::trending($db,$hours,$ignored)];
+    foreach (\HeadlineScout\WordStats::periods() as $period) {
+        $periods[]=[
+            'key'=>$period['key'],
+            'rows'=>\HeadlineScout\WordStats::trendingSeconds($db,$period['seconds'],$ignored)
+        ];
     }
     echo json_encode(['periods'=>$periods],JSON_THROW_ON_ERROR|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
 } catch (Throwable $e) {
