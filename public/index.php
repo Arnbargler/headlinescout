@@ -10,8 +10,12 @@ $lastScanAt=$sources ? max(array_map(static fn($s)=>strtotime((string)($s['last_
 $scansStale=$lastScanAt>0 && time()-$lastScanAt>3600;
 $ignored=\HeadlineScout\WordStats::ignored($db);
 $wordStats=[];
-foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
-    $wordStats[]=['hours'=>$hours,'label'=>$label,'rows'=>\HeadlineScout\WordStats::trending($db,$hours,$ignored)];
+foreach (\HeadlineScout\WordStats::periods() as $period){
+    $wordStats[]=[
+        'key'=>$period['key'],
+        'label'=>$period['label'],
+        'rows'=>\HeadlineScout\WordStats::trendingSeconds($db,$period['seconds'],$ignored)
+    ];
 }
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -23,8 +27,8 @@ foreach ([1=>'1 hour',24=>'24 hours',168=>'7 days'] as $hours=>$label){
 <div class="word-stats-title"><h2>WORD COUNT</h2><span>Mentions in unique headlines per period · arrows compare with previous matching period</span></div>
 <div class="word-stats-grid">
 <?php foreach($wordStats as $period): ?>
-<div class="word-period" data-hours="<?=(int)$period['hours']?>"><h3><?=e($period['label'])?></h3>
-<?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['label']==='1 hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
+<div class="word-period" data-period="<?=e($period['key'])?>"><h3><?=e($period['label'])?></h3>
+<?php if(!$period['rows']):?><p class="word-empty">No matching words in this period.<?=($period['key']==='hour'&&$scansStale)?' The most recent successful scan is over an hour old; check cron or scan a source in Settings.':''?></p><?php else:?>
 <ol class="word-ranking"><?php foreach($period['rows'] as $entry): ?>
 <li class="word-trend-<?=e($entry['direction'])?>" data-word="<?=e($entry['word'])?>" data-count="<?=(int)$entry['count']?>">
   <span class="word-label"><?=e($entry['word'])?></span>
