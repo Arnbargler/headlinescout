@@ -76,6 +76,10 @@ The expected Colossus cron lines are listed in README. Git commits do not instal
 - Simplified the navigation test's old ticker placeholder handling.
 - Kept `/lab.php` compatibility, `SourceLab` diagnostic extraction mode, CSS for actual Settings actions, existing regression tests, and retained historical SQLite schema/data semantics.
 
+## Long-term deployment intent (not current work)
+
+Continue adding features to the LAN version. Keep them portable to a conventional PHP/SQLite Linux host. When public hosting becomes a priority, use a static, timestamped, periodically refreshed anonymous homepage **without AJAX polling**, reserve real-time AJAX pages for authenticated users, and reserve Settings and write actions for admins. Keep collectors independent from visitor activity and preserve SQLite history. Server-side auth, rate limits, and bounded queries will be required; login is not itself a denial-of-service defense. Hosting provider, cache intervals, precise feature tiers, and implementation details are deliberately undecided. See [ROADMAP.md](ROADMAP.md).
+
 ## Suggested next action
 
 Run all CLI tests and browser checks on Colossus first, then decide whether to address the empty-success scan safeguard and future years-of-history performance. No new user-facing features were intentionally added in this cleanup.
