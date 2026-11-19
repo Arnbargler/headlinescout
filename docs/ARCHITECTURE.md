@@ -71,6 +71,10 @@ Ticker selection reuses the same cached 1/24/168-hour top-ten rankings (rather t
 
 Settings has no authentication: LAN-only by design. State-changing Settings forms have CSRF tokens, but public exposure requires real access control. Keep `var/` outside the web root. PHP requires curl, dom/xml, mbstring and PDO SQLite extensions. PHP 8.0+ language features are used (including `match`).
 
+## Future hosting boundary (planning only)
+
+The current LAN-only application remains unchanged. Future public hosting should separate an anonymously accessible **non-polling static snapshot** from an authenticated **live dashboard with AJAX** and separately authorized **administration**. Prefer generating public HTML/data on a schedule from the existing collector/cache rather than running per-visitor analytical SQLite queries. Put authorization and rate limits on the server, never trust client-side JavaScript, and preserve separation of `public/`, `src/`, `bin/`, and `var/`. Avoid host-specific assumptions in new features. See [ROADMAP.md](ROADMAP.md) for the intended migration approach; details are deferred.
+
 ## Intentional constraints / future expansion
 
 Dashboard Word Count rows link to `/articles.php?q=...&period=...`; this enables a historical search of collected headlines in the chosen 15 min/1h/24h/7d/30d/365d window. This is an on-demand search rather than an automatic historical archive view: results are deduplicated by headline ID, filtered to successful scan appearances at positions 1–3, ordered by latest matched appearance, and paginated at 100 per page. The normal Articles mode continues to show current front pages. Title matching uses a case-insensitive word boundary check (with an SQLite substring prefilter).
