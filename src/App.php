@@ -246,7 +246,7 @@ SQL);
             if ($http !== 200) throw new RuntimeException('HTTP status ' . $http);
             $ct = strtolower($headers['content-type'] ?? '');
             if ($ct && !str_contains($ct,'html')) throw new RuntimeException('Unexpected content type: ' . $ct);
-            $items = self::extract($html,$final,$source['selector'],3);
+            $items = self::extract($html,$final,$source['selector'],10);
             $db->beginTransaction();
             $ins = $db->prepare('INSERT OR IGNORE INTO headlines(source_id,url,title,first_seen_at,last_seen_at,is_current) VALUES(?,?,?,?,?,1)');
             $upd = $db->prepare('UPDATE headlines SET title=?,last_seen_at=?,is_current=1 WHERE source_id=? AND url=?');
